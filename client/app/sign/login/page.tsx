@@ -1,5 +1,5 @@
 import LoginView from "./login";
 
-export default function RegisterPage() {
+export default function LoginPage() {
   return <LoginView/>;
 };
