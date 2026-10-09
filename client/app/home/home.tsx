@@ -5,6 +5,7 @@ import Link from "next/link";
 import HeaderView from "../components/header/header";
 import SidebarView, { navItems } from "../components/sidebar/sidebar";
 import FooterView from "../components/footer/footer";
+import { useAuth } from "../context/AuthContext";
 
 const quickStats = [
   { label: "Upcoming Trips", value: "—" },
@@ -14,6 +15,8 @@ const quickStats = [
 
 export default function HomeView() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { user } = useAuth();
+  const displayName = user?.name || "User Name";
 
   return (
     <div className="relative flex min-h-screen bg-slate-950 font-sans text-white">
@@ -36,7 +39,7 @@ export default function HomeView() {
             </div>
             <p className="text-sm font-medium text-teal-50/90">Dashboard</p>
             <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
-              Welcome back, User Name! 👋
+              Welcome back, {displayName}! 👋
             </h1>
             <p className="mt-3 max-w-xl text-teal-50">
               Ready for your next adventure? Explore the modules below to check
