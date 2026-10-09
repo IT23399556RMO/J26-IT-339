@@ -2,6 +2,7 @@ import "dotenv/config";
 import express, { type Request, type Response } from "express";
 import cors from "cors";
 import { testConnection } from "./services/db.js";
+import userRoutes from "./routes/userRoutes.js";
 import type { ApiResponse } from "./types/index.js";
 
 const app = express();
@@ -20,6 +21,8 @@ app.use(
 app.use(express.json());
 
 // ---------- Routes ----------
+app.use("/api/users", userRoutes);
+
 app.get("/api/health", async (_req: Request, res: Response<ApiResponse>) => {
   try {
     await testConnection();
@@ -44,3 +47,4 @@ async function start() {
 }
 
 start();
+
