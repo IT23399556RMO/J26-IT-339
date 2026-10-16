@@ -3,6 +3,7 @@ import express, { type Request, type Response } from "express";
 import cors from "cors";
 import { testConnection } from "./services/db.js";
 import userRoutes from "./routes/userRoutes.js";
+import preferenceRoutes from "./routes/preferenceRoutes.js";
 import type { ApiResponse } from "./types/index.js";
 
 const app = express();
@@ -22,6 +23,7 @@ app.use(express.json());
 
 // ---------- Routes ----------
 app.use("/api/users", userRoutes);
+app.use("/api/preferences", preferenceRoutes);
 
 app.get("/api/health", async (_req: Request, res: Response<ApiResponse>) => {
   try {
