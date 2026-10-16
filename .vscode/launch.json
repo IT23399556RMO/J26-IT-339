@@ -1,0 +1,30 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Frontend - Chrome (Port 3000)",
+      "cwd": "${workspaceFolder}/client",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "args": [
+        "-d",
+        "chrome",
+        "--web-port=3000"
+      ]
+    },
+    {
+      "name": "Frontend - Web Server (Port 3000)",
+      "cwd": "${workspaceFolder}/client",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "args": [
+        "-d",
+        "web-server",
+        "--web-port=3000",
+        "--web-hostname=localhost"
+      ]
+    }
+  ]
+}
