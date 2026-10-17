@@ -144,19 +144,6 @@ export default function CalibrationView() {
 
         <main className="flex-1 px-4 py-8 sm:px-6 lg:px-10">
           <div className="mx-auto max-w-4xl">
-            {/* Breadcrumb / Step Indicator */}
-            <nav aria-label="Breadcrumb" className="mb-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-teal-400">
-              <Link href="/home" className="hover:text-teal-300 transition-colors">
-                Home
-              </Link>
-              <span className="text-slate-600">/</span>
-              <span className="text-slate-400">Environment Module</span>
-              <span className="text-slate-600">/</span>
-              <span className="rounded-full bg-teal-500/10 px-2.5 py-0.5 border border-teal-500/30 text-teal-300">
-                Step 1: Calibration
-              </span>
-            </nav>
-
             {/* Header Section */}
             <header className="mb-8">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
