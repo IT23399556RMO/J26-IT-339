@@ -12,6 +12,7 @@ type NavItem = {
 
 // Placeholder routes — update once each module's page is created.
 export const navItems: NavItem[] = [
+  { label: "Home", href: "../../home", icon: "🌿", description: "Home dashboarrd" },
   { label: "Environment", href: "/environment", icon: "🌿", description: "Weather & conditions" },
   { label: "Crowds", href: "/crowd", icon: "👥", description: "Live crowd levels" },
   { label: "Itinerary", href: "/itinerary", icon: "🗺️", description: "Plan your trips" },
