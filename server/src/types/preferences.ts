@@ -31,3 +31,35 @@ export interface UpsertPreferenceInput {
   exertionCapacity?: string;
 }
 
+// Request body for evaluating environmental suitability.
+export interface EvaluateSuitabilityInput {
+  latitude?: number | string;
+  longitude?: number | string;
+}
+
+// The strict 13-feature JSON payload required by the Python FastAPI inference engine.
+export interface InferencePayload {
+  temperature_2m: number;
+  relative_humidity_2m: number;
+  apparent_temperature: number;
+  precipitation: number;
+  cloud_cover: number;
+  wind_speed_10m: number;
+  shortwave_radiation: number;
+  pm10: number;
+  pm2_5: number;
+  thermal_tolerance: number;
+  rain_tolerance: number;
+  uv_sensitivity: number;
+  wind_preference: number;
+}
+
+/**
+ * Response structure returned by the Python FastAPI inference service.
+ */
+export interface SuitabilityPredictionResult {
+  status: string;
+  suitability_score: number;
+  suitability_class: "Excellent" | "Good" | "Moderate" | "Poor" | string;
+  features_used?: InferencePayload;
+}
