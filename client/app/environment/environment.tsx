@@ -1,11 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import HeaderView from "../components/header/header";
 import SidebarView from "../components/sidebar/sidebar";
 import FooterView from "../components/footer/footer";
 import { useAuth } from "../context/AuthContext";
+import {
+  fetchSuitabilityScore,
+  type SuitabilityResponse,
+  InferenceEngineError,
+} from "../services/suitabilityService";
+
+// Target evaluation coordinates: Sigiriya, Sri Lanka
+const SIGIRIYA_COORDINATES = {
+  name: "Sigiriya, Sri Lanka",
+  latitude: 7.957,
+  longitude: 80.7603,
+};
 
 type TimeSlot = {
   time: string;
@@ -140,16 +152,126 @@ const environmentalMetrics: MetricItem[] = [
 export default function EnvironmentView() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<string>("08:00 - 10:00 AM");
-  const { user } = useAuth();
+  const { user, token } = useAuth();
 
-  // Circular gauge math for 84% score
-  const score = 84;
+  // Dynamic ML Suitability State
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isOffline503, setIsOffline503] = useState<boolean>(false);
+  const [suitabilityData, setSuitabilityData] =
+    useState<SuitabilityResponse | null>(null);
+  const [refreshKey, setRefreshKey] = useState<number>(0);
+
+  // Trigger evaluation on mount using Sigiriya coordinates
+  useEffect(() => {
+    let ignore = false;
+
+    if (!token) {
+      // Allow context restoration without indefinite spinning
+      const timer = setTimeout(() => {
+        if (!ignore) setLoading(false);
+      }, 600);
+      return () => {
+        ignore = true;
+        clearTimeout(timer);
+      };
+    }
+
+    fetchSuitabilityScore(
+      SIGIRIYA_COORDINATES.latitude,
+      SIGIRIYA_COORDINATES.longitude,
+      token,
+    )
+      .then((data) => {
+        if (!ignore) {
+          setSuitabilityData(data);
+          setError(null);
+          setIsOffline503(false);
+          setLoading(false);
+        }
+      })
+      .catch((err: unknown) => {
+        if (!ignore) {
+          const is503 =
+            (err instanceof InferenceEngineError && err.status === 503) ||
+            (err instanceof Error &&
+              err.message.toLowerCase().includes("inference engine unavailable"));
+
+          setIsOffline503(is503);
+          setError(
+            is503
+              ? "Inference Engine Unavailable (HTTP 503): Python FastAPI ML service is offline. Live atmospheric sensors are active."
+              : err instanceof Error
+              ? err.message
+              : "Failed to evaluate suitability score.",
+          );
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [token, refreshKey]);
+
+  // Dynamic circular progress values
+  const dynamicScore = suitabilityData
+    ? Math.round(suitabilityData.suitability_score)
+    : isOffline503
+    ? 0
+    : 84; // Mock fallback baseline
+
+  const dynamicClass = (
+    suitabilityData?.suitability_class ??
+    (isOffline503 ? "OFFLINE" : "EXCELLENT")
+  ).toUpperCase();
+
+  // Circular gauge math (radius = 78, circumference ≈ 502.65)
   const radius = 78;
   const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (score / 100) * circumference;
+  const strokeDashoffset = circumference - (dynamicScore / 100) * circumference;
 
   const currentSlot =
     diurnalWindows.find((w) => w.time === selectedSlot) ?? diurnalWindows[1];
+
+  // Visual badge style mapping based on suitability class
+  const getBadgeStyle = (sClass: string) => {
+    switch (sClass) {
+      case "EXCELLENT":
+        return {
+          container:
+            "border-emerald-400/40 bg-emerald-500/15 text-emerald-300 shadow-emerald-500/10",
+          dot: "bg-emerald-400",
+        };
+      case "GOOD":
+        return {
+          container:
+            "border-sky-400/40 bg-sky-500/15 text-sky-300 shadow-sky-500/10",
+          dot: "bg-sky-400",
+        };
+      case "MODERATE":
+        return {
+          container:
+            "border-amber-400/40 bg-amber-500/15 text-amber-300 shadow-amber-500/10",
+          dot: "bg-amber-400",
+        };
+      case "POOR":
+        return {
+          container:
+            "border-rose-400/40 bg-rose-500/15 text-rose-300 shadow-rose-500/10",
+          dot: "bg-rose-400",
+        };
+      case "OFFLINE":
+      default:
+        return {
+          container:
+            "border-amber-500/40 bg-amber-500/20 text-amber-300 shadow-amber-500/10",
+          dot: "bg-amber-400",
+        };
+    }
+  };
+
+  const badgeStyle = getBadgeStyle(dynamicClass);
 
   return (
     <div className="relative flex min-h-screen bg-slate-950 font-sans text-white">
@@ -173,14 +295,33 @@ export default function EnvironmentView() {
             {/* Top Navigation & Status Bar */}
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
+                <nav
+                  aria-label="Breadcrumb"
+                  className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-teal-400"
+                >
+                  <Link
+                    href="/home"
+                    className="hover:text-teal-300 transition-colors"
+                  >
+                    Home
+                  </Link>
+                  <span className="text-slate-600">/</span>
+                  <span className="text-slate-400">Environment</span>
+                  <span className="text-slate-600">/</span>
+                  <span className="text-teal-300">Dashboard</span>
+                </nav>
                 <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
                   Environmental Dashboard
                 </h1>
                 <p className="mt-1 text-sm text-slate-300">
-                  Real-time biometeorological analytics, climate comfort index,
-                  and optimal travel windows for{" "}
+                  Real-time biometeorological analytics, supervised AI suitability
+                  scoring, and optimal travel windows for{" "}
                   <span className="font-semibold text-teal-300">
-                    Colombo, Sri Lanka
+                    {SIGIRIYA_COORDINATES.name}
+                  </span>{" "}
+                  <span className="text-xs text-slate-400 font-mono">
+                    (Lat: {SIGIRIYA_COORDINATES.latitude}, Lon:{" "}
+                    {SIGIRIYA_COORDINATES.longitude})
                   </span>
                   .
                 </p>
@@ -188,6 +329,33 @@ export default function EnvironmentView() {
 
               {/* Action Buttons */}
               <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLoading(true);
+                    setError(null);
+                    setRefreshKey((k) => k + 1);
+                  }}
+                  disabled={loading}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3.5 py-2 text-xs font-medium text-slate-300 hover:bg-white/10 hover:text-white transition-colors cursor-pointer disabled:opacity-50"
+                  title="Re-run environmental inference"
+                >
+                  <svg
+                    className={`h-3.5 w-3.5 ${loading ? "animate-spin text-teal-400" : ""}`}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                    />
+                  </svg>
+                  <span>Re-evaluate</span>
+                </button>
+
                 <Link
                   href="/environment/calibration"
                   className="inline-flex items-center gap-2 rounded-xl border border-teal-500/30 bg-teal-500/10 px-4 py-2.5 text-xs font-semibold text-teal-300 transition-all hover:bg-teal-500/20 hover:border-teal-400/50 hover:shadow-lg hover:shadow-teal-500/10"
@@ -196,6 +364,40 @@ export default function EnvironmentView() {
                 </Link>
               </div>
             </div>
+
+            {/* Offline / Error Advisory Banner */}
+            {error && (
+              <div
+                role="alert"
+                className="overflow-hidden rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-xs text-amber-200 backdrop-blur-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-lg shadow-amber-500/5 animate-fade-in"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-500/20 text-lg">
+                    ⚠️
+                  </span>
+                  <div>
+                    <strong className="font-semibold block text-amber-100">
+                      {isOffline503
+                        ? "AI Inference Engine Unavailable (HTTP 503)"
+                        : "Suitability Evaluation Notice"}
+                    </strong>
+                    <span className="text-amber-200/90">{error}</span>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLoading(true);
+                    setError(null);
+                    setRefreshKey((k) => k + 1);
+                  }}
+                  className="self-start sm:self-center shrink-0 rounded-lg border border-amber-500/40 bg-amber-500/20 px-3.5 py-1.5 font-bold text-amber-200 hover:bg-amber-500/30 transition-colors cursor-pointer"
+                >
+                  Retry Evaluation
+                </button>
+              </div>
+            )}
 
             {/* Primary Hero Section: Circular Suitability Score + Overview */}
             <section
@@ -214,10 +416,12 @@ export default function EnvironmentView() {
                   Climate Suitability Index
                 </span>
 
-                {/* SVG Circular Gauge */}
+                {/* SVG Circular Gauge with Smooth Loading Skeleton */}
                 <div className="relative my-4 flex items-center justify-center">
                   <svg
-                    className="h-52 w-52 sm:h-60 sm:w-60 transform -rotate-90"
+                    className={`h-52 w-52 sm:h-60 sm:w-60 transform -rotate-90 transition-all duration-700 ${
+                      loading ? "animate-pulse opacity-70" : "opacity-100"
+                    }`}
                     viewBox="0 0 190 190"
                   >
                     {/* Background Track */}
@@ -230,19 +434,39 @@ export default function EnvironmentView() {
                       className="text-slate-800/80"
                       fill="transparent"
                     />
+
                     {/* Foreground Gradient Track */}
-                    <circle
-                      cx="95"
-                      cy="95"
-                      r={radius}
-                      stroke="url(#suitabilityGradient)"
-                      strokeWidth="14"
-                      strokeDasharray={circumference}
-                      strokeDashoffset={strokeDashoffset}
-                      strokeLinecap="round"
-                      fill="transparent"
-                      className="transition-all duration-1000 ease-out"
-                    />
+                    {!loading && !isOffline503 && (
+                      <circle
+                        cx="95"
+                        cy="95"
+                        r={radius}
+                        stroke="url(#suitabilityGradient)"
+                        strokeWidth="14"
+                        strokeDasharray={circumference}
+                        strokeDashoffset={strokeDashoffset}
+                        strokeLinecap="round"
+                        fill="transparent"
+                        className="transition-all duration-1000 ease-out"
+                      />
+                    )}
+
+                    {/* Loading Indicator Spinner Arc */}
+                    {loading && (
+                      <circle
+                        cx="95"
+                        cy="95"
+                        r={radius}
+                        stroke="#2dd4bf"
+                        strokeWidth="14"
+                        strokeDasharray={circumference}
+                        strokeDashoffset={circumference * 0.75}
+                        strokeLinecap="round"
+                        fill="transparent"
+                        className="animate-spin origin-center"
+                      />
+                    )}
+
                     <defs>
                       <linearGradient
                         id="suitabilityGradient"
@@ -259,26 +483,58 @@ export default function EnvironmentView() {
                   </svg>
 
                   {/* Centered Score & Content */}
-                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                    <span className="text-5xl sm:text-6xl font-black tracking-tight text-white font-sans drop-shadow-sm">
-                      {score}%
-                    </span>
-                    <span className="mt-1 text-[11px] font-semibold uppercase tracking-wider text-teal-300">
-                      Overall Score
-                    </span>
-                  </div>
+                  {loading ? (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                      <div className="h-8 w-8 animate-spin rounded-full border-3 border-teal-400 border-t-transparent shadow-lg shadow-teal-500/20" />
+                      <span className="mt-3 text-xs font-semibold text-teal-300 tracking-wide animate-pulse">
+                        Evaluating Model...
+                      </span>
+                      <span className="text-[10px] text-slate-400">
+                        Sigiriya Telemetry
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                      <span
+                        suppressHydrationWarning
+                        className="text-5xl sm:text-6xl font-black tracking-tight text-white font-sans drop-shadow-sm"
+                      >
+                        {isOffline503 ? "—" : `${dynamicScore}%`}
+                      </span>
+                      <span className="mt-1 text-[11px] font-semibold uppercase tracking-wider text-teal-300">
+                        {isOffline503 ? "Model Offline" : "Overall Score"}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
-                {/* Status Badge Underneath */}
-                <div className="mt-1 inline-flex items-center gap-2 rounded-full border border-emerald-400/40 bg-emerald-500/15 px-5 py-1.5 text-xs font-extrabold tracking-widest text-emerald-300 shadow-md shadow-emerald-500/10 uppercase">
-                  <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                  EXCELLENT
-                </div>
+                {/* Status Badge Underneath Circle */}
+                {loading ? (
+                  <div className="mt-1 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-5 py-1.5 text-xs font-semibold text-slate-400 animate-pulse uppercase">
+                    <span className="h-2 w-2 rounded-full bg-teal-400 animate-ping" />
+                    Calculating...
+                  </div>
+                ) : (
+                  <div
+                    className={`mt-1 inline-flex items-center gap-2 rounded-full border px-5 py-1.5 text-xs font-extrabold tracking-widest shadow-md uppercase transition-all ${badgeStyle.container}`}
+                  >
+                    <span
+                      className={`h-2 w-2 rounded-full ${badgeStyle.dot} ${
+                        isOffline503 ? "" : "animate-pulse"
+                      }`}
+                    />
+                    {dynamicClass}
+                  </div>
+                )}
 
                 <p className="mt-4 max-w-xs text-xs text-slate-300">
-                  Biometeorological conditions align exceptionally well with your
-                  calibrated comfort preferences. Optimal for walking tours &
-                  sightseeing.
+                  {isOffline503
+                    ? "Inference engine is currently offline. Real-time atmospheric metrics remain accessible below."
+                    : dynamicScore >= 80
+                    ? "Biometeorological conditions align exceptionally well with your calibrated comfort preferences. Optimal for outdoor excursions."
+                    : dynamicScore >= 60
+                    ? "Favorable touring conditions with mild heat or wind factors. Suitable for standard sightseeing."
+                    : "Sub-optimal biometeorological conditions detected. Consider adjusting schedule or visiting sheltered attractions."}
                 </p>
               </div>
 
@@ -302,7 +558,11 @@ export default function EnvironmentView() {
                         className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-5 backdrop-blur-xl transition-all duration-300 hover:border-teal-400/40 hover:bg-white/[0.08] hover:shadow-lg hover:shadow-teal-500/5"
                       >
                         <div className="flex items-center justify-between">
-                          <span className="text-2xl" role="img" aria-label={metric.title}>
+                          <span
+                            className="text-2xl"
+                            role="img"
+                            aria-label={metric.title}
+                          >
                             {metric.icon}
                           </span>
                           <span
@@ -440,7 +700,8 @@ export default function EnvironmentView() {
                       Selected Slot: {currentSlot.time}
                     </span>
                     <span className="text-slate-400 ml-2">
-                      ({currentSlot.condition} • Forecast {currentSlot.temp} • UV Index: {currentSlot.uv})
+                      ({currentSlot.condition} • Forecast {currentSlot.temp} •
+                      UV Index: {currentSlot.uv})
                     </span>
                   </div>
                 </div>
@@ -520,4 +781,3 @@ export default function EnvironmentView() {
     </div>
   );
 }
-

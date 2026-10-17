@@ -42,3 +42,5 @@ next-env.d.ts
 
 desktop.ini
 setup.txt
+
+xgboost_suitability_model.pkl
