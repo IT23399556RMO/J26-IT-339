@@ -90,20 +90,21 @@ export default function AdminHeaderView({ onMenuClick }: AdminHeaderViewProps) {
             <div className="flex items-center gap-3">
               <div
                 aria-hidden="true"
+                suppressHydrationWarning
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 text-sm font-bold text-white shadow-md shadow-purple-500/30"
               >
                 {initials}
               </div>
               <div className="hidden leading-tight md:block">
                 <div className="flex items-center gap-1.5">
-                  <p className="text-sm font-semibold text-white">
+                  <p suppressHydrationWarning className="text-sm font-semibold text-white">
                     {displayName}
                   </p>
                   <span className="rounded-md bg-purple-500/20 px-1.5 py-0.5 text-[10px] font-bold text-purple-300 ring-1 ring-purple-500/40">
                     ADMIN
                   </span>
                 </div>
-                <p className="text-xs text-slate-400">{displayEmail}</p>
+                <p suppressHydrationWarning className="text-xs text-slate-400">{displayEmail}</p>
               </div>
             </div>
 

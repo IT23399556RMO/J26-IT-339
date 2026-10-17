@@ -65,16 +65,23 @@ export default function SettingsView() {
             {/* Profile Overview Card */}
             <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl sm:p-8">
               <div className="flex flex-col items-center gap-6 sm:flex-row">
-                <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-400 to-sky-500 text-2xl font-bold text-slate-950 shadow-lg shadow-teal-500/30">
+                <div
+                  suppressHydrationWarning
+                  className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-400 to-sky-500 text-2xl font-bold text-slate-950 shadow-lg shadow-teal-500/30"
+                >
                   {initials}
                 </div>
 
                 <div className="flex-1 text-center sm:text-left">
                   <div className="flex flex-wrap items-center justify-center gap-3 sm:justify-start">
-                    <h2 className="text-2xl font-bold text-white">
+                    <h2
+                      suppressHydrationWarning
+                      className="text-2xl font-bold text-white"
+                    >
                       {displayName}
                     </h2>
                     <span
+                      suppressHydrationWarning
                       className={`rounded-full px-3 py-0.5 text-xs font-semibold ${
                         userRole === "admin"
                           ? "bg-purple-500/20 text-purple-300 ring-1 ring-purple-500/40"
@@ -84,8 +91,10 @@ export default function SettingsView() {
                       {userRole.toUpperCase()}
                     </span>
                   </div>
-                  <p className="mt-1 text-sm text-slate-400">{displayEmail}</p>
-                  <p className="mt-2 text-xs font-mono text-slate-500">
+                  <p suppressHydrationWarning className="mt-1 text-sm text-slate-400">
+                    {displayEmail}
+                  </p>
+                  <p suppressHydrationWarning className="mt-2 text-xs font-mono text-slate-500">
                     User ID: {userId}
                   </p>
                 </div>
@@ -97,7 +106,10 @@ export default function SettingsView() {
                   <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
                     Full Name
                   </p>
-                  <p className="mt-1 text-base font-medium text-white">
+                  <p
+                    suppressHydrationWarning
+                    className="mt-1 text-base font-medium text-white"
+                  >
                     {displayName}
                   </p>
                 </div>
@@ -106,7 +118,10 @@ export default function SettingsView() {
                   <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
                     Email Address
                   </p>
-                  <p className="mt-1 text-base font-medium text-white">
+                  <p
+                    suppressHydrationWarning
+                    className="mt-1 text-base font-medium text-white"
+                  >
                     {displayEmail}
                   </p>
                 </div>

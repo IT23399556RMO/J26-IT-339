@@ -38,7 +38,10 @@ export default function HomeView() {
               ✈️
             </div>
             <p className="text-sm font-medium text-teal-50/90">Dashboard</p>
-            <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
+            <h1
+              suppressHydrationWarning
+              className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl"
+            >
               Welcome back, {displayName}! 👋
             </h1>
             <p className="mt-3 max-w-xl text-teal-50">

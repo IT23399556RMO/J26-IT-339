@@ -75,20 +75,28 @@ export default function HeaderView({ onMenuClick }: HeaderViewProps) {
             <div className="flex items-center gap-3">
               <div
                 aria-hidden="true"
+                suppressHydrationWarning
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-teal-400 to-sky-500 text-sm font-bold text-slate-950 shadow-md shadow-teal-500/20"
               >
                 {initials}
               </div>
               <div className="hidden leading-tight md:block">
                 <div className="flex items-center gap-2">
-                  <p className="text-sm font-semibold text-white">{displayName}</p>
+                  <p suppressHydrationWarning className="text-sm font-semibold text-white">
+                    {displayName}
+                  </p>
                   {userRole === "admin" && (
-                    <span className="rounded-md bg-purple-500/20 px-1.5 py-0.5 text-[10px] font-semibold text-purple-300 ring-1 ring-purple-500/30">
+                    <span
+                      suppressHydrationWarning
+                      className="rounded-md bg-purple-500/20 px-1.5 py-0.5 text-[10px] font-semibold text-purple-300 ring-1 ring-purple-500/30"
+                    >
                       ADMIN
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-slate-400">{displayEmail}</p>
+                <p suppressHydrationWarning className="text-xs text-slate-400">
+                  {displayEmail}
+                </p>
               </div>
             </div>
 
