@@ -35,6 +35,9 @@ export interface UpsertPreferenceInput {
 export interface EvaluateSuitabilityInput {
   latitude?: number | string;
   longitude?: number | string;
+  targetDateTime?: string;
+  date?: string;
+  time?: string;
 }
 
 // The strict 13-feature JSON payload required by the Python FastAPI inference engine.

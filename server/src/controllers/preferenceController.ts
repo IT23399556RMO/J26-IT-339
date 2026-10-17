@@ -229,6 +229,12 @@ export async function evaluateSuitability(
         ? Number(req.body.longitude)
         : 79.8612;
 
+    const targetDateTime =
+      req.body?.targetDateTime ||
+      (req.body?.date && req.body?.time
+        ? `${req.body.date}T${req.body.time}`
+        : null);
+
     if (isNaN(lat) || isNaN(lon)) {
       res.status(400).json({
         success: false,
@@ -256,9 +262,9 @@ export async function evaluateSuitability(
     const uvSensitivity = userPrefs?.uv_sensitivity ?? 50;
     const windPreference = userPrefs?.wind_preference ?? 50;
 
-    // 3. Parallel calls to Open-Meteo Weather and Air Quality APIs
-    const forecastUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,cloud_cover,wind_speed_10m,shortwave_radiation&hourly=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,cloud_cover,wind_speed_10m,shortwave_radiation`;
-    const airQualityUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=pm10,pm2_5&hourly=pm10,pm2_5`;
+    // 3. Parallel calls to Open-Meteo Weather and Air Quality APIs (requesting 14-day hourly coverage)
+    const forecastUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&forecast_days=14&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,cloud_cover,wind_speed_10m,shortwave_radiation&hourly=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,cloud_cover,wind_speed_10m,shortwave_radiation`;
+    const airQualityUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&forecast_days=7&current=pm10,pm2_5&hourly=pm10,pm2_5`;
 
     let forecastData: any;
     let airQualityData: any;
@@ -293,52 +299,88 @@ export async function evaluateSuitability(
       return;
     }
 
+    // Determine matching hourly index if targetDateTime is specified
+    let targetHourIndex = -1;
+    if (targetDateTime && Array.isArray(forecastData?.hourly?.time)) {
+      const timePrefix = targetDateTime.includes("T")
+        ? targetDateTime.slice(0, 13)
+        : targetDateTime.replace(" ", "T").slice(0, 13);
+
+      targetHourIndex = forecastData.hourly.time.findIndex(
+        (t: string) => typeof t === "string" && t.startsWith(timePrefix),
+      );
+    }
+
+    const useHourly = targetHourIndex >= 0;
+
     // 4. Construct exact 13-feature JSON payload matching the Python data contract
     const inferencePayload: InferencePayload = {
       temperature_2m: Number(
-        forecastData?.current?.temperature_2m ??
-          forecastData?.hourly?.temperature_2m?.[0] ??
-          25.0,
+        useHourly
+          ? forecastData.hourly.temperature_2m[targetHourIndex]
+          : forecastData?.current?.temperature_2m ??
+              forecastData?.hourly?.temperature_2m?.[0] ??
+              25.0,
       ),
       relative_humidity_2m: Number(
-        forecastData?.current?.relative_humidity_2m ??
-          forecastData?.hourly?.relative_humidity_2m?.[0] ??
-          70.0,
+        useHourly
+          ? forecastData.hourly.relative_humidity_2m[targetHourIndex]
+          : forecastData?.current?.relative_humidity_2m ??
+              forecastData?.hourly?.relative_humidity_2m?.[0] ??
+              70.0,
       ),
       apparent_temperature: Number(
-        forecastData?.current?.apparent_temperature ??
-          forecastData?.hourly?.apparent_temperature?.[0] ??
-          26.0,
+        useHourly
+          ? forecastData.hourly.apparent_temperature[targetHourIndex]
+          : forecastData?.current?.apparent_temperature ??
+              forecastData?.hourly?.apparent_temperature?.[0] ??
+              26.0,
       ),
       precipitation: Number(
-        forecastData?.current?.precipitation ??
-          forecastData?.hourly?.precipitation?.[0] ??
-          0.0,
+        useHourly
+          ? forecastData.hourly.precipitation[targetHourIndex]
+          : forecastData?.current?.precipitation ??
+              forecastData?.hourly?.precipitation?.[0] ??
+              0.0,
       ),
       cloud_cover: Number(
-        forecastData?.current?.cloud_cover ??
-          forecastData?.hourly?.cloud_cover?.[0] ??
-          20.0,
+        useHourly
+          ? forecastData.hourly.cloud_cover[targetHourIndex]
+          : forecastData?.current?.cloud_cover ??
+              forecastData?.hourly?.cloud_cover?.[0] ??
+              20.0,
       ),
       wind_speed_10m: Number(
-        forecastData?.current?.wind_speed_10m ??
-          forecastData?.hourly?.wind_speed_10m?.[0] ??
-          10.0,
+        useHourly
+          ? forecastData.hourly.wind_speed_10m[targetHourIndex]
+          : forecastData?.current?.wind_speed_10m ??
+              forecastData?.hourly?.wind_speed_10m?.[0] ??
+              10.0,
       ),
       shortwave_radiation: Number(
-        forecastData?.current?.shortwave_radiation ??
-          forecastData?.hourly?.shortwave_radiation?.[0] ??
-          200.0,
+        useHourly
+          ? forecastData.hourly.shortwave_radiation[targetHourIndex]
+          : forecastData?.current?.shortwave_radiation ??
+              forecastData?.hourly?.shortwave_radiation?.[0] ??
+              200.0,
       ),
       pm10: Number(
-        airQualityData?.current?.pm10 ??
-          airQualityData?.hourly?.pm10?.[0] ??
-          20.0,
+        useHourly && Array.isArray(airQualityData?.hourly?.pm10)
+          ? airQualityData.hourly.pm10[targetHourIndex] ??
+              airQualityData?.current?.pm10 ??
+              20.0
+          : airQualityData?.current?.pm10 ??
+              airQualityData?.hourly?.pm10?.[0] ??
+              20.0,
       ),
       pm2_5: Number(
-        airQualityData?.current?.pm2_5 ??
-          airQualityData?.hourly?.pm2_5?.[0] ??
-          15.0,
+        useHourly && Array.isArray(airQualityData?.hourly?.pm2_5)
+          ? airQualityData.hourly.pm2_5[targetHourIndex] ??
+              airQualityData?.current?.pm2_5 ??
+              15.0
+          : airQualityData?.current?.pm2_5 ??
+              airQualityData?.hourly?.pm2_5?.[0] ??
+              15.0,
       ),
       thermal_tolerance: Math.round(Number(thermalTolerance)),
       rain_tolerance: Math.round(Number(rainTolerance)),
