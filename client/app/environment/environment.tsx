@@ -7,17 +7,14 @@ import SidebarView from "../components/sidebar/sidebar";
 import FooterView from "../components/footer/footer";
 import { useAuth } from "../context/AuthContext";
 import {
+  DestinationInputs,
+  SAMPLE_DESTINATIONS,
+} from "./destination/destination";
+import {
   fetchSuitabilityScore,
   type SuitabilityResponse,
   InferenceEngineError,
 } from "../services/suitabilityService";
-
-// Target evaluation coordinates: Sigiriya, Sri Lanka
-const SIGIRIYA_COORDINATES = {
-  name: "Sigiriya, Sri Lanka",
-  latitude: 7.957,
-  longitude: 80.7603,
-};
 
 type TimeSlot = {
   time: string;
@@ -149,10 +146,24 @@ const environmentalMetrics: MetricItem[] = [
   },
 ];
 
+/** Formats today's date and default 10:00 AM as default target ISO representation */
+function getDefaultDateTime(): string {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}T10:00`;
+}
+
 export default function EnvironmentView() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<string>("08:00 - 10:00 AM");
   const { user, token } = useAuth();
+
+  // Spatio-Temporal Configuration State (Sigiriya default: 7.9570, 80.7603)
+  const [latitude, setLatitude] = useState<number>(7.957);
+  const [longitude, setLongitude] = useState<number>(80.7603);
+  const [targetDateTime, setTargetDateTime] = useState<string>(getDefaultDateTime);
 
   // Dynamic ML Suitability State
   const [loading, setLoading] = useState<boolean>(true);
@@ -162,7 +173,7 @@ export default function EnvironmentView() {
     useState<SuitabilityResponse | null>(null);
   const [refreshKey, setRefreshKey] = useState<number>(0);
 
-  // Trigger evaluation on mount using Sigiriya coordinates
+  // Trigger evaluation whenever latitude, longitude, targetDateTime, or token changes
   useEffect(() => {
     let ignore = false;
 
@@ -177,11 +188,7 @@ export default function EnvironmentView() {
       };
     }
 
-    fetchSuitabilityScore(
-      SIGIRIYA_COORDINATES.latitude,
-      SIGIRIYA_COORDINATES.longitude,
-      token,
-    )
+    fetchSuitabilityScore(latitude, longitude, token, targetDateTime)
       .then((data) => {
         if (!ignore) {
           setSuitabilityData(data);
@@ -212,7 +219,23 @@ export default function EnvironmentView() {
     return () => {
       ignore = true;
     };
-  }, [token, refreshKey]);
+  }, [latitude, longitude, targetDateTime, token, refreshKey]);
+
+  // Handler passed to destination inputs component
+  const handleAnalyze = (lat: number, lon: number, datetime: string) => {
+    setLoading(true);
+    setLatitude(lat);
+    setLongitude(lon);
+    setTargetDateTime(datetime);
+  };
+
+  // Find destination name for active coordinates
+  const currentDestinationName =
+    SAMPLE_DESTINATIONS.find(
+      (d) =>
+        Math.abs(d.latitude - latitude) < 0.005 &&
+        Math.abs(d.longitude - longitude) < 0.005,
+    )?.name ?? "Custom Coordinates";
 
   // Dynamic circular progress values
   const dynamicScore = suitabilityData
@@ -314,14 +337,16 @@ export default function EnvironmentView() {
                   Environmental Dashboard
                 </h1>
                 <p className="mt-1 text-sm text-slate-300">
-                  Real-time biometeorological analytics, supervised AI suitability
-                  scoring, and optimal travel windows for{" "}
+                  Target Destination:{" "}
                   <span className="font-semibold text-teal-300">
-                    {SIGIRIYA_COORDINATES.name}
+                    {currentDestinationName}
                   </span>{" "}
                   <span className="text-xs text-slate-400 font-mono">
-                    (Lat: {SIGIRIYA_COORDINATES.latitude}, Lon:{" "}
-                    {SIGIRIYA_COORDINATES.longitude})
+                    (Lat: {latitude}, Lon: {longitude})
+                  </span>{" "}
+                  • Target Time:{" "}
+                  <span className="font-semibold text-teal-300">
+                    {targetDateTime.replace("T", " at ")}
                   </span>
                   .
                 </p>
@@ -364,6 +389,14 @@ export default function EnvironmentView() {
                 </Link>
               </div>
             </div>
+
+            {/* Spatio-Temporal Configuration Panel */}
+            <section aria-label="Spatio-Temporal Configuration">
+              <DestinationInputs
+                onAnalyze={handleAnalyze}
+                loading={loading}
+              />
+            </section>
 
             {/* Offline / Error Advisory Banner */}
             {error && (
@@ -490,7 +523,7 @@ export default function EnvironmentView() {
                         Evaluating Model...
                       </span>
                       <span className="text-[10px] text-slate-400">
-                        Sigiriya Telemetry
+                        {currentDestinationName}
                       </span>
                     </div>
                   ) : (
