@@ -12,6 +12,9 @@ import { SAMPLE_DESTINATIONS } from "./destination/sample_destinations";
 import {
   fetchSuitabilityScore,
   type SuitabilityResponse,
+  type EnvironmentalFeatures,
+  type MetricItemDetail,
+  type DiurnalWindowSlot,
   InferenceEngineError,
 } from "../services/suitabilityService";
 
@@ -88,62 +91,238 @@ type MetricItem = {
   detail: string;
 };
 
-const environmentalMetrics: MetricItem[] = [
-  {
-    id: "heat",
-    title: "Heat / Temp",
-    value: "28°C",
-    icon: "🌡️",
-    status: "Pleasant",
-    statusColor: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
-    detail: "Feels like 29°C • Humidity 62%",
-  },
-  {
-    id: "rain",
-    title: "Precipitation",
-    value: "0.0 mm",
-    icon: "🌧️",
-    status: "Dry / Clear",
-    statusColor: "text-cyan-400 bg-cyan-500/10 border-cyan-500/20",
-    detail: "0% probability throughout the day",
-  },
-  {
-    id: "visibility",
-    title: "Visibility",
-    value: "12 km",
-    icon: "👁️",
-    status: "Excellent",
-    statusColor: "text-teal-400 bg-teal-500/10 border-teal-500/20",
-    detail: "Unrestricted panoramic vista",
-  },
-  {
-    id: "uv",
-    title: "UV Index",
-    value: "6",
-    icon: "☀️",
-    status: "High Alert",
-    statusColor: "text-amber-400 bg-amber-500/10 border-amber-500/20",
-    detail: "Peak UV window: 11:30 AM - 02:00 PM",
-  },
-  {
-    id: "wind",
-    title: "Wind Speed",
-    value: "14 km/h",
-    icon: "🍃",
-    status: "Gentle Breeze",
-    statusColor: "text-sky-400 bg-sky-500/10 border-sky-500/20",
-    detail: "North-Easterly • Gusts up to 18 km/h",
-  },
-  {
-    id: "aqi",
-    title: "Air Quality (AQI)",
-    value: "38",
-    icon: "🫁",
-    status: "Good",
-    statusColor: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
-    detail: "PM2.5: 8 µg/m³ • Clean fresh air",
-  },
-];
+/**
+ * Computes dynamic 2x3 environmental parameter cards from Open-Meteo telemetry
+ */
+function computeEnvironmentalMetrics(features?: EnvironmentalFeatures): MetricItem[] {
+  if (!features) {
+    return [
+      {
+        id: "heat",
+        title: "Heat / Temp",
+        value: "28°C",
+        icon: "🌡️",
+        status: "Pleasant",
+        statusColor: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
+        detail: "Feels like 29°C • Humidity 62%",
+      },
+      {
+        id: "rain",
+        title: "Precipitation",
+        value: "0.0 mm",
+        icon: "🌧️",
+        status: "Dry / Clear",
+        statusColor: "text-cyan-400 bg-cyan-500/10 border-cyan-500/20",
+        detail: "0% probability throughout the day",
+      },
+      {
+        id: "visibility",
+        title: "Visibility",
+        value: "12 km",
+        icon: "👁️",
+        status: "Excellent",
+        statusColor: "text-teal-400 bg-teal-500/10 border-teal-500/20",
+        detail: "Unrestricted panoramic vista",
+      },
+      {
+        id: "uv",
+        title: "UV Index",
+        value: "6",
+        icon: "☀️",
+        status: "High Alert",
+        statusColor: "text-amber-400 bg-amber-500/10 border-amber-500/20",
+        detail: "Peak UV window: 11:30 AM - 02:00 PM",
+      },
+      {
+        id: "wind",
+        title: "Wind Speed",
+        value: "14 km/h",
+        icon: "🍃",
+        status: "Gentle Breeze",
+        statusColor: "text-sky-400 bg-sky-500/10 border-sky-500/20",
+        detail: "North-Easterly • Gusts up to 18 km/h",
+      },
+      {
+        id: "aqi",
+        title: "Air Quality (AQI)",
+        value: "38",
+        icon: "🫁",
+        status: "Good",
+        statusColor: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
+        detail: "PM2.5: 8 µg/m³ • Clean fresh air",
+      },
+    ];
+  }
+
+  const temp = features.temperature_2m;
+  const apparentTemp = features.apparent_temperature;
+  const humidity = features.relative_humidity_2m;
+  const precip = features.precipitation;
+  const cloudCover = features.cloud_cover;
+  const windSpeed = features.wind_speed_10m;
+  const radiation = features.shortwave_radiation;
+  const pm25 = features.pm2_5;
+  const pm10 = features.pm10;
+
+  // 1. Heat
+  let heatStatus = "Pleasant";
+  let heatColor = "text-emerald-400 bg-emerald-500/10 border-emerald-500/20";
+  if (temp >= 33) {
+    heatStatus = "Extreme Heat";
+    heatColor = "text-rose-400 bg-rose-500/10 border-rose-500/20";
+  } else if (temp >= 29) {
+    heatStatus = "Warm";
+    heatColor = "text-amber-400 bg-amber-500/10 border-amber-500/20";
+  } else if (temp < 18) {
+    heatStatus = "Cool";
+    heatColor = "text-sky-400 bg-sky-500/10 border-sky-500/20";
+  }
+
+  // 2. Rain
+  let rainStatus = "Dry / Clear";
+  let rainColor = "text-cyan-400 bg-cyan-500/10 border-cyan-500/20";
+  if (precip >= 5.0) {
+    rainStatus = "Heavy Rain";
+    rainColor = "text-rose-400 bg-rose-500/10 border-rose-500/20";
+  } else if (precip > 0.5) {
+    rainStatus = "Rain Showers";
+    rainColor = "text-amber-400 bg-amber-500/10 border-amber-500/20";
+  } else if (precip > 0.0) {
+    rainStatus = "Light Drizzle";
+    rainColor = "text-sky-400 bg-sky-500/10 border-sky-500/20";
+  }
+
+  // 3. Visibility (derived from cloud cover and pm2.5)
+  const visibilityKm = Math.max(
+    2,
+    Math.min(16, Math.round(16 - cloudCover * 0.06 - pm25 * 0.08))
+  );
+  let visStatus = "Excellent";
+  let visColor = "text-teal-400 bg-teal-500/10 border-teal-500/20";
+  if (visibilityKm < 5) {
+    visStatus = "Hazy / Low";
+    visColor = "text-amber-400 bg-amber-500/10 border-amber-500/20";
+  } else if (visibilityKm < 10) {
+    visStatus = "Moderate";
+    visColor = "text-emerald-400 bg-emerald-500/10 border-emerald-500/20";
+  }
+
+  // 4. UV Index (solar radiation approximation)
+  const uvIndex = Math.max(0, Math.min(12, Math.round(radiation / 85)));
+  let uvStatus = "Low Risk";
+  let uvColor = "text-emerald-400 bg-emerald-500/10 border-emerald-500/20";
+  if (uvIndex >= 9) {
+    uvStatus = "Extreme Alert";
+    uvColor = "text-rose-400 bg-rose-500/10 border-rose-500/20";
+  } else if (uvIndex >= 6) {
+    uvStatus = "High Alert";
+    uvColor = "text-amber-400 bg-amber-500/10 border-amber-500/20";
+  } else if (uvIndex >= 3) {
+    uvStatus = "Moderate";
+    uvColor = "text-yellow-400 bg-yellow-500/10 border-yellow-500/20";
+  }
+
+  // 5. Wind Speed
+  let windStatus = "Gentle Breeze";
+  let windColor = "text-sky-400 bg-sky-500/10 border-sky-500/20";
+  if (windSpeed >= 30) {
+    windStatus = "Strong Gusts";
+    windColor = "text-rose-400 bg-rose-500/10 border-rose-500/20";
+  } else if (windSpeed >= 18) {
+    windStatus = "Moderate Breeze";
+    windColor = "text-sky-400 bg-sky-500/10 border-sky-500/20";
+  } else if (windSpeed < 6) {
+    windStatus = "Calm";
+    windColor = "text-emerald-400 bg-emerald-500/10 border-emerald-500/20";
+  }
+
+  // 6. Air Quality (US AQI approximation from PM2.5)
+  const aqi = Math.round(
+    pm25 <= 12
+      ? (pm25 / 12) * 50
+      : pm25 <= 35.4
+      ? 50 + ((pm25 - 12) / 23.4) * 50
+      : 100 + ((pm25 - 35.4) / 20) * 50
+  );
+  let aqiStatus = "Good";
+  let aqiColor = "text-emerald-400 bg-emerald-500/10 border-emerald-500/20";
+  if (aqi > 150) {
+    aqiStatus = "Unhealthy";
+    aqiColor = "text-rose-400 bg-rose-500/10 border-rose-500/20";
+  } else if (aqi > 100) {
+    aqiStatus = "Sensitive Alert";
+    aqiColor = "text-amber-400 bg-amber-500/10 border-amber-500/20";
+  } else if (aqi > 50) {
+    aqiStatus = "Moderate";
+    aqiColor = "text-yellow-400 bg-yellow-500/10 border-yellow-500/20";
+  }
+
+  return [
+    {
+      id: "heat",
+      title: "Heat / Temp",
+      value: `${temp.toFixed(1)}°C`,
+      icon: "🌡️",
+      status: heatStatus,
+      statusColor: heatColor,
+      detail: `Feels like ${apparentTemp.toFixed(1)}°C • Humidity ${Math.round(humidity)}%`,
+    },
+    {
+      id: "rain",
+      title: "Precipitation",
+      value: `${precip.toFixed(1)} mm`,
+      icon: "🌧️",
+      status: rainStatus,
+      statusColor: rainColor,
+      detail:
+        precip > 0
+          ? `${precip.toFixed(1)} mm precipitation expected`
+          : "0% probability in this window",
+    },
+    {
+      id: "visibility",
+      title: "Visibility",
+      value: `${visibilityKm} km`,
+      icon: "👁️",
+      status: visStatus,
+      statusColor: visColor,
+      detail: `Cloud cover: ${Math.round(cloudCover)}% • Open vista`,
+    },
+    {
+      id: "uv",
+      title: "UV Index",
+      value: `${uvIndex}`,
+      icon: "☀️",
+      status: uvStatus,
+      statusColor: uvColor,
+      detail:
+        uvIndex >= 6
+          ? "Intense solar radiation • Protection advised"
+          : "Low to moderate solar exposure",
+    },
+    {
+      id: "wind",
+      title: "Wind Speed",
+      value: `${windSpeed.toFixed(1)} km/h`,
+      icon: "🍃",
+      status: windStatus,
+      statusColor: windColor,
+      detail:
+        windSpeed >= 20
+          ? "Elevated wind shear • Take care on ridges"
+          : "Steady gentle airflow across terrain",
+    },
+    {
+      id: "aqi",
+      title: "Air Quality (AQI)",
+      value: `${aqi}`,
+      icon: "🫁",
+      status: aqiStatus,
+      statusColor: aqiColor,
+      detail: `PM2.5: ${pm25.toFixed(1)} µg/m³ • PM10: ${pm10.toFixed(1)} µg/m³`,
+    },
+  ];
+}
 
 /** Formats today's date and default 10:00 AM as default target ISO representation */
 function getDefaultDateTime(): string {
@@ -238,12 +417,13 @@ export default function EnvironmentView() {
 
   // Dynamic circular progress values
   const dynamicScore = suitabilityData
-    ? Math.round(suitabilityData.suitability_score)
+    ? Math.round(suitabilityData.current_score ?? suitabilityData.suitability_score)
     : isOffline503
     ? 0
     : 84; // Mock fallback baseline
 
   const dynamicClass = (
+    suitabilityData?.current_class ??
     suitabilityData?.suitability_class ??
     (isOffline503 ? "OFFLINE" : "EXCELLENT")
   ).toUpperCase();
@@ -253,8 +433,34 @@ export default function EnvironmentView() {
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (dynamicScore / 100) * circumference;
 
+  const bestWindow = suitabilityData?.best_window ?? "08:00 - 10:00";
+
+  // Use dynamic diurnal windows from backend if provided, otherwise fallback
+  const activeDiurnalWindows: (TimeSlot | DiurnalWindowSlot)[] =
+    suitabilityData?.diurnal_windows && suitabilityData.diurnal_windows.length > 0
+      ? suitabilityData.diurnal_windows
+      : diurnalWindows;
+
   const currentSlot =
-    diurnalWindows.find((w) => w.time === selectedSlot) ?? diurnalWindows[1];
+    activeDiurnalWindows.find((w) => w.time === selectedSlot) ?? activeDiurnalWindows[1]!;
+
+  // Dynamic atmospheric telemetry features and risk alerts from Open-Meteo
+  const features = suitabilityData?.data?.features_used;
+
+  // 2x3 CSS Grid Metrics: Bind directly to suitabilityData.metrics object
+  const activeMetrics: (MetricItem | MetricItemDetail)[] = suitabilityData?.metrics
+    ? [
+        suitabilityData.metrics.heat,
+        suitabilityData.metrics.rain,
+        suitabilityData.metrics.visibility,
+        suitabilityData.metrics.uv,
+        suitabilityData.metrics.wind,
+        suitabilityData.metrics.aqi,
+      ]
+    : computeEnvironmentalMetrics(features);
+
+  // Dynamic alerts array from backend
+  const activeAlerts: string[] = suitabilityData?.alerts ?? [];
 
   // Visual badge style mapping based on suitability class
   const getBadgeStyle = (sClass: string) => {
@@ -584,7 +790,7 @@ export default function EnvironmentView() {
 
                   {/* 2x3 Grid */}
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5 sm:gap-4">
-                    {environmentalMetrics.map((metric) => (
+                    {activeMetrics.map((metric) => (
                       <article
                         key={metric.id}
                         className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-5 backdrop-blur-xl transition-all duration-300 hover:border-teal-400/40 hover:bg-white/[0.08] hover:shadow-lg hover:shadow-teal-500/5"
@@ -665,14 +871,14 @@ export default function EnvironmentView() {
                 <div className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-teal-400 to-sky-500 px-4 py-2 text-xs font-extrabold text-slate-950 shadow-lg shadow-teal-500/25 self-start sm:self-auto">
                   <span>⭐ TOP RECOMMENDATION:</span>
                   <span className="rounded-lg bg-black/20 px-2 py-0.5 text-slate-950 font-black">
-                    08-10 AM (92% Match)
+                    {bestWindow} Window
                   </span>
                 </div>
               </div>
 
               {/* Time Window Interactive Cards */}
               <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-                {diurnalWindows.map((slot) => {
+                {activeDiurnalWindows.map((slot) => {
                   const isSelected = selectedSlot === slot.time;
                   return (
                     <button
@@ -747,11 +953,11 @@ export default function EnvironmentView() {
               </div>
             </section>
 
-            {/* Risk Alert Warning Banner (Yellow/Amber) */}
+            {/* Risk Alert Warning Banner (Yellow/Amber Safety Advisory) */}
             <aside
               role="alert"
               aria-label="Environmental Risk Alert"
-              className="relative overflow-hidden rounded-3xl border border-amber-500/40 bg-gradient-to-r from-amber-500/20 via-amber-600/10 to-orange-500/20 p-6 backdrop-blur-xl shadow-xl shadow-amber-500/10"
+              className="relative overflow-hidden rounded-3xl border border-amber-500/40 bg-gradient-to-r from-amber-500/20 via-amber-600/10 to-orange-500/20 p-6 backdrop-blur-xl shadow-xl shadow-amber-500/10 transition-all duration-300"
             >
               {/* Background ambient glow */}
               <div
@@ -768,30 +974,64 @@ export default function EnvironmentView() {
                   <div>
                     <div className="flex items-center gap-2">
                       <h2 className="text-base font-bold text-amber-200">
-                        Environmental Risk Alert
+                        Environmental Safety & Risk Alerts
                       </h2>
-                      <span className="rounded-full bg-amber-500/20 border border-amber-500/40 px-2 py-0.5 text-[10px] font-bold text-amber-300 uppercase">
-                        UV Caution
+                      <span className="rounded-full bg-amber-500/20 border border-amber-500/40 px-2 py-0.5 text-[10px] font-bold uppercase text-amber-300">
+                        {activeAlerts.length > 0
+                          ? `${activeAlerts.length} Active Alert${activeAlerts.length > 1 ? "s" : ""}`
+                          : "Monitored"}
                       </span>
                     </div>
 
-                    <p className="mt-1 text-sm font-medium text-amber-100/90 leading-relaxed">
-                      Extreme UV detected: Apply SPF 50+ sunscreen every 2 hours
-                      and wear a hat.
-                    </p>
+                    {activeAlerts.length > 0 ? (
+                      <div className="mt-2 space-y-1.5">
+                        {activeAlerts.map((alertText, idx) => (
+                          <div
+                            key={idx}
+                            className="flex items-start gap-2 text-sm font-medium text-amber-100/95 leading-relaxed"
+                          >
+                            <span className="text-amber-400 font-bold mt-0.5">•</span>
+                            <span>{alertText}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="mt-1 text-sm font-medium text-amber-100/90 leading-relaxed">
+                        No critical atmospheric thresholds exceeded. Biometeorological conditions are favorable for outdoor tourism.
+                      </p>
+                    )}
 
-                    <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+                    <div className="mt-3.5 flex flex-wrap items-center gap-2 text-xs">
+                      {activeAlerts.some((a) => a.toLowerCase().includes("uv")) && (
+                        <span className="rounded-lg bg-black/30 border border-amber-500/20 px-2.5 py-1 text-amber-200">
+                          🧴 SPF 50+ Sunscreen
+                        </span>
+                      )}
+                      {activeAlerts.some((a) => a.toLowerCase().includes("heat")) && (
+                        <span className="rounded-lg bg-black/30 border border-amber-500/20 px-2.5 py-1 text-amber-200">
+                          💧 Hydration Mandatory
+                        </span>
+                      )}
+                      {activeAlerts.some(
+                        (a) =>
+                          a.toLowerCase().includes("mask") ||
+                          a.toLowerCase().includes("air quality"),
+                      ) && (
+                        <span className="rounded-lg bg-black/30 border border-amber-500/20 px-2.5 py-1 text-amber-200">
+                          😷 Mask for Outdoor Exertion
+                        </span>
+                      )}
+                      {activeAlerts.some(
+                        (a) =>
+                          a.toLowerCase().includes("rain") ||
+                          a.toLowerCase().includes("precip"),
+                      ) && (
+                        <span className="rounded-lg bg-black/30 border border-amber-500/20 px-2.5 py-1 text-amber-200">
+                          ☔ Rain Protection Gear
+                        </span>
+                      )}
                       <span className="rounded-lg bg-black/30 border border-amber-500/20 px-2.5 py-1 text-amber-200">
-                        🧴 SPF 50+ Broad Spectrum
-                      </span>
-                      <span className="rounded-lg bg-black/30 border border-amber-500/20 px-2.5 py-1 text-amber-200">
-                        👒 Wide-brimmed Hat
-                      </span>
-                      <span className="rounded-lg bg-black/30 border border-amber-500/20 px-2.5 py-1 text-amber-200">
-                        🕶️ UV400 Sunglasses
-                      </span>
-                      <span className="rounded-lg bg-black/30 border border-amber-500/20 px-2.5 py-1 text-amber-200">
-                        ☂️ Seek Shade: 11:30 AM - 02:00 PM
+                        ⭐ Optimal Window: {bestWindow}
                       </span>
                     </div>
                   </div>
@@ -801,7 +1041,7 @@ export default function EnvironmentView() {
                   href="/environment/calibration"
                   className="self-start sm:self-center shrink-0 rounded-xl border border-amber-500/40 bg-amber-500/20 px-4 py-2.5 text-xs font-bold text-amber-200 transition-colors hover:bg-amber-500/30"
                 >
-                  Adjust UV Sensitivity →
+                  Adjust Preferences →
                 </Link>
               </div>
             </aside>
