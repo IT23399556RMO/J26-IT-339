@@ -1,0 +1,19 @@
+{
+  "model_name": "Random Forest Regressor (VADER-TripAdvisor)",
+  "project_id": "J26-IT339",
+  "test_mae": 0.195,
+  "target_mae": 0.7,
+  "is_target_met": true,
+  "cv_mae": 0.2013,
+  "test_rmse": 0.2476,
+  "test_r2": 0.5941,
+  "baseline_mae": 0.2979,
+  "training_samples": 4000,
+  "test_samples": 1000,
+  "hyperparameters": {
+    "n_estimators": 120,
+    "max_depth": 14,
+    "min_samples_split": 4,
+    "min_samples_leaf": 2
+  }
+}
