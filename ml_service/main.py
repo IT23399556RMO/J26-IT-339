@@ -35,7 +35,7 @@ async def load_model():
     """Loads the serialized Joblib/ONNX model into RAM to satisfy the <500ms latency requirement."""
     global model
     try:
-        model = joblib.load("models/suitability_rf_model.pkl")
+        model = joblib.load("models/xgboost_suitability_model.pkl")
         print("Supervised ML Inference Engine loaded successfully into RAM.")
     except Exception as e:
         print(f"CRITICAL ERROR: Failed to load serialized model. {e}")
@@ -50,8 +50,14 @@ async def predict_suitability(payload: InferencePayload):
         raise HTTPException(status_code=503, detail="Inference Engine unavailable.")
 
     try:
-        # Convert the strict Pydantic payload to a Pandas DataFrame
-        input_data = pd.DataFrame([payload.dict()])
+        # Align payload features with the model's expected training schema
+        payload_dict = payload.dict()
+        expected_features = getattr(model, "feature_names_in_", None)
+        if expected_features is not None:
+            aligned_cols = [f for f in expected_features if f in payload_dict]
+            input_data = pd.DataFrame([payload_dict])[aligned_cols]
+        else:
+            input_data = pd.DataFrame([payload_dict])
         
         # Execute the supervised machine learning regression pipeline
         raw_score = model.predict(input_data)[0]

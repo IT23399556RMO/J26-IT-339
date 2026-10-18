@@ -388,8 +388,8 @@ export async function evaluateSuitability(
       wind_preference: Math.round(Number(windPreference)),
     };
 
-    // 5. POST payload to Python FastAPI service at http://127.0.0.1:8000/api/predict/suitability
-    const mlBase = process.env.ML_SERVICE_URL ?? "http://127.0.0.1:8000";
+    // 5. POST payload to Python FastAPI service at http://127.0.0.1:8080/api/predict/suitability
+    const mlBase = process.env.ML_SERVICE_URL ?? "http://127.0.0.1:8080";
     const mlEndpoint = mlBase.endsWith("/api/predict/suitability")
       ? mlBase
       : `${mlBase.replace(/\/$/, "")}/api/predict/suitability`;
