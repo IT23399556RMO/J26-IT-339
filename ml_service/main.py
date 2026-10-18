@@ -1,3 +1,4 @@
+from typing import Union, List
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import joblib
@@ -30,6 +31,16 @@ class InferencePayload(BaseModel):
     uv_sensitivity: int
     wind_preference: int
 
+def categorize_score(score: float) -> str:
+    if score >= 80:
+        return "Excellent"
+    elif score >= 60:
+        return "Good"
+    elif score >= 40:
+        return "Moderate"
+    else:
+        return "Poor"
+
 @app.on_event("startup")
 async def load_model():
     """Loads the serialized Joblib/ONNX model into RAM to satisfy the <500ms latency requirement."""
@@ -41,45 +52,42 @@ async def load_model():
         print(f"CRITICAL ERROR: Failed to load serialized model. {e}")
 
 @app.post("/api/predict/suitability")
-async def predict_suitability(payload: InferencePayload):
+async def predict_suitability(payload: Union[InferencePayload, List[InferencePayload]]):
     """
     Translates multi-dimensional atmospheric data and user preferences 
     into an activity-sensitive Suitability Score (0-100).
+    Supports single payload object or batch array of payloads.
     """
     if model is None:
         raise HTTPException(status_code=503, detail="Inference Engine unavailable.")
 
     try:
+        is_batch = isinstance(payload, list)
+        items = payload if is_batch else [payload]
+        payload_dicts = [item.dict() for item in items]
+
         # Align payload features with the model's expected training schema
-        payload_dict = payload.dict()
         expected_features = getattr(model, "feature_names_in_", None)
-        if expected_features is not None:
-            aligned_cols = [f for f in expected_features if f in payload_dict]
-            input_data = pd.DataFrame([payload_dict])[aligned_cols]
+        if expected_features is not None and len(payload_dicts) > 0:
+            aligned_cols = [f for f in expected_features if f in payload_dicts[0]]
+            input_data = pd.DataFrame(payload_dicts)[aligned_cols]
         else:
-            input_data = pd.DataFrame([payload_dict])
+            input_data = pd.DataFrame(payload_dicts)
         
         # Execute the supervised machine learning regression pipeline
-        raw_score = model.predict(input_data)[0]
+        raw_scores = model.predict(input_data)
         
-        # Clamp score to mathematical boundaries
-        score = max(0.0, min(100.0, float(raw_score)))
-        
-        # Determine discrete categorical class
-        if score >= 80:
-            suitability_class = "Excellent"
-        elif score >= 60:
-            suitability_class = "Good"
-        elif score >= 40:
-            suitability_class = "Moderate"
-        else:
-            suitability_class = "Poor"
-        
-        # JSON Data Handoff Payload for Component 3 Routing
-        return {
-            "status": "success",
-            "suitability_score": round(score, 2),
-            "suitability_class": suitability_class
-        }
+        results = []
+        for raw in raw_scores:
+            clamped = max(0.0, min(100.0, float(raw)))
+            results.append({
+                "status": "success",
+                "suitability_score": round(clamped, 2),
+                "suitability_class": categorize_score(clamped)
+            })
+
+        if is_batch:
+            return results
+        return results[0]
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

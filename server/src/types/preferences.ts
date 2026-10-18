@@ -66,3 +66,45 @@ export interface SuitabilityPredictionResult {
   suitability_class: "Excellent" | "Good" | "Moderate" | "Poor" | string;
   features_used?: InferencePayload;
 }
+
+export interface MetricItemDetail {
+  id: string;
+  title: string;
+  value: string;
+  status: string;
+  statusColor: string;
+  detail: string;
+  icon: string;
+}
+
+export interface DashboardMetricsPayload {
+  heat: MetricItemDetail;
+  rain: MetricItemDetail;
+  visibility: MetricItemDetail;
+  uv: MetricItemDetail;
+  wind: MetricItemDetail;
+  aqi: MetricItemDetail;
+}
+
+export interface DiurnalSlotPayload {
+  time: string;
+  label: string;
+  score: number;
+  temp: string;
+  uv: number;
+  condition: string;
+  isBest?: boolean;
+}
+
+export interface EvaluatedSuitabilityResponse {
+  current_score: number;
+  current_class: string;
+  best_window: string;
+  metrics: DashboardMetricsPayload;
+  alerts: string[];
+  diurnal_windows: DiurnalSlotPayload[];
+  suitability_score: number;
+  suitability_class: string;
+  features_used?: InferencePayload;
+  hourly_scores?: number[];
+}
