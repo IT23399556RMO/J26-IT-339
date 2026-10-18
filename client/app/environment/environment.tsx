@@ -6,10 +6,9 @@ import HeaderView from "../components/header/header";
 import SidebarView from "../components/sidebar/sidebar";
 import FooterView from "../components/footer/footer";
 import { useAuth } from "../context/AuthContext";
-import {
-  DestinationInputs,
-  SAMPLE_DESTINATIONS,
-} from "./destination/destination";
+import { DestinationInputs } from "./destination/destination";
+import { SAMPLE_DESTINATIONS } from "./destination/sample_destinations";
+
 import {
   fetchSuitabilityScore,
   type SuitabilityResponse,

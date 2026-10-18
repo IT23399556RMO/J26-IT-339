@@ -6,54 +6,7 @@ import { useRouter } from "next/navigation";
 import HeaderView from "../../components/header/header";
 import SidebarView from "../../components/sidebar/sidebar";
 import FooterView from "../../components/footer/footer";
-
-export interface DestinationOption {
-  id: string;
-  name: string;
-  latitude: number;
-  longitude: number;
-  region: string;
-  icon: string;
-  climateZone: string;
-  description: string;
-}
-
-export const SAMPLE_DESTINATIONS: DestinationOption[] = [
-  {
-    id: "sigiriya",
-    name: "Sigiriya Ancient Rock Fortress",
-    latitude: 7.957,
-    longitude: 80.7603,
-    region: "Matale / Central Province",
-    icon: "🏰",
-    climateZone: "Dry Zone / Cultural Triangle",
-    description:
-      "Ancient 5th-century palace citadel rising 200m above the jungle plains. Features historic frescoes, water gardens, and panoramic views.",
-  },
-  {
-    id: "yala",
-    name: "Yala National Park Safari",
-    latitude: 6.367,
-    longitude: 81.517,
-    region: "Hambantota / Southern Province",
-    icon: "🐆",
-    climateZone: "Arid Coastal / Semi-arid Thorn Forest",
-    description:
-      "Premier wildlife sanctuary renowned for the world's highest leopard density, herds of wild Asian elephants, and diverse coastal lagoons.",
-  },
-  {
-    id: "temple_of_tooth",
-    name: "Temple of the Tooth Relic",
-    latitude: 7.2936,
-    longitude: 80.6413,
-    region: "Kandy / Central Province",
-    icon: "🛕",
-    climateZone: "Wet Highland / Mountain Valley",
-    description:
-      "Sacred Buddhist shrine in the Royal Palace complex of Kandy, nestled in misty tropical hills and holding the relic of the tooth of the Buddha.",
-  },
-];
-
+import { SAMPLE_DESTINATIONS } from "./sample_destinations";
 export interface DestinationInputsProps {
   /**
    * Callback invoked when the user submits or updates spatio-temporal parameters.
