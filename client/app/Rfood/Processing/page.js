@@ -19,6 +19,7 @@ export default function Processing() {
     async function analyzeFood() {
       const imageData = sessionStorage.getItem("foodImage");
 
+      // Redirect if no image is available
       if (!imageData) {
         router.replace("/Rfood/IdentifyFood");
         return;
@@ -60,6 +61,7 @@ try {
 console.log("API status:", apiResponse.status);
 console.log("API response:", result);
 
+// Check whether the API request was successfu
 if (!apiResponse.ok) {
   throw new Error(
     result.error ||
@@ -72,6 +74,7 @@ if (!apiResponse.ok) {
 
         sessionStorage.setItem("foodResult", JSON.stringify(result));
 
+        // Update the progress and display the success message
         setProgress(100);
         setMessage("Food identified successfully!");
 
