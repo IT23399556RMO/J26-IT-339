@@ -5,11 +5,12 @@ import HeaderView from "../components/header/header";
 import SidebarView from "../components/sidebar/sidebar";
 import FooterView from "../components/footer/footer";
 import ProfileView from "./components/ProfileView";
+import FullItineraryWizard from "./components/FullItineraryWizard";
 import DayPlanView from "./components/DayPlanView";
 import AdaptiveReplanView from "./components/AdaptiveReplanView";
 import OnSiteSupportView from "./components/OnSiteSupportView";
 import MobileBottomNav, { ItineraryTab } from "./components/MobileBottomNav";
-import { TouristProfile, ItineraryStop, DQNResolution } from "./types";
+import { TouristProfile, ItineraryStop, DQNResolution, Attraction, BudgetBreakdown } from "./types";
 import {
   buildOptimizedItinerary,
   executeAdaptiveReplan,
@@ -47,6 +48,8 @@ export default function ItineraryPage({
   // Initial tourist profile matching the research proposal defaults
   const [profile, setProfile] = useState<TouristProfile>({
     travelerType: "couple",
+    adultsCount: 2,
+    childrenCount: 0,
     originCountry: "United Kingdom 🇬🇧",
     categories: ["Heritage", "Wildlife", "Culinary"],
     startTime: "08:00",
@@ -65,6 +68,7 @@ export default function ItineraryPage({
   const [delayMinutes, setDelayMinutes] = useState(45);
   const [activeInSituStop, setActiveInSituStop] = useState<ItineraryStop | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isWizardMode, setIsWizardMode] = useState<boolean>(true);
 
   // Initialize and check backend connection
   useEffect(() => {
@@ -126,6 +130,41 @@ export default function ItineraryPage({
       setActiveTab("day-plan");
       showToast("✨ AI Itinerary generated successfully using DQN policy!");
     }, 700);
+  };
+
+  // Handle Plan Finalized from the 6-Step Full Itinerary Wizard
+  const handlePlanFinalized = async (
+    updatedProfile: TouristProfile,
+    selectedAttractions: Attraction[],
+    budget: BudgetBreakdown
+  ) => {
+    setProfile(updatedProfile);
+    setIsOptimizing(true);
+
+    if (isBackendConnected) {
+      try {
+        const apiResult = await optimizeItineraryApi(updatedProfile);
+        if (apiResult && apiResult.stops.length > 0) {
+          setStops(apiResult.stops);
+          setActiveInSituStop(apiResult.stops[0]);
+          setIsOptimizing(false);
+          setActiveTab("day-plan");
+          showToast(`✨ Complete Plan & Budget Finalized ($${budget.grandTotalUSD} USD)! DQN Schedule Ready.`);
+          return;
+        }
+      } catch (err) {
+        console.warn("Backend optimization call failed, generating local itinerary", err);
+      }
+    }
+
+    const generated = buildOptimizedItinerary(updatedProfile);
+    setStops(generated);
+    if (generated.length > 0) {
+      setActiveInSituStop(generated[0]);
+    }
+    setIsOptimizing(false);
+    setActiveTab("day-plan");
+    showToast(`✨ Complete Plan & Budget Finalized ($${budget.grandTotalUSD} USD)! DQN Schedule Ready.`);
   };
 
   // Trigger Mid-trip delay simulation (FastAPI with fallback)
@@ -306,7 +345,7 @@ export default function ItineraryPage({
                 }`}
               >
                 <Sliders className="h-3.5 w-3.5" />
-                1. Profile & Constraints
+                1. AI Planner & Budget
               </button>
 
               <button
@@ -391,12 +430,63 @@ export default function ItineraryPage({
 
           {/* Render Active View matching the 4 features */}
           {activeTab === "profile" && (
-            <ProfileView
-              profile={profile}
-              onChangeProfile={setProfile}
-              onGenerate={handleGenerateItinerary}
-              isOptimizing={isOptimizing}
-            />
+            <div className="space-y-6">
+              {/* Mode Switcher */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur-xl">
+                <div>
+                  <h2 className="text-sm font-bold text-white flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-teal-400" />
+                    Sri Lanka Travel Itinerary & Budget Optimization
+                  </h2>
+                  <p className="text-xs text-slate-400">
+                    Powered by Component 3 OpenAI Autonomous Agent & Deep Q-Network Policy
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2 rounded-xl bg-slate-950 p-1 border border-white/10">
+                  <button
+                    type="button"
+                    onClick={() => setIsWizardMode(true)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      isWizardMode
+                        ? "bg-gradient-to-r from-teal-400 to-sky-500 text-slate-950 shadow-md"
+                        : "text-slate-400 hover:text-white"
+                    }`}
+                  >
+                    <Sparkles className="h-3.5 w-3.5" />
+                    <span>Interactive 6-Step Wizard</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsWizardMode(false)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      !isWizardMode
+                        ? "bg-teal-500 text-slate-950 shadow-md"
+                        : "text-slate-400 hover:text-white"
+                    }`}
+                  >
+                    <Sliders className="h-3.5 w-3.5" />
+                    <span>Quick Sliders</span>
+                  </button>
+                </div>
+              </div>
+
+              {isWizardMode ? (
+                <FullItineraryWizard
+                  initialProfile={profile}
+                  onPlanFinalized={handlePlanFinalized}
+                  isBackendConnected={isBackendConnected}
+                />
+              ) : (
+                <ProfileView
+                  profile={profile}
+                  onChangeProfile={setProfile}
+                  onGenerate={handleGenerateItinerary}
+                  isOptimizing={isOptimizing}
+                />
+              )}
+            </div>
           )}
 
           {activeTab === "day-plan" && (

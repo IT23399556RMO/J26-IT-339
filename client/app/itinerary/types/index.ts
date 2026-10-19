@@ -30,6 +30,80 @@ export interface Attraction {
   };
 }
 
+export interface VehicleOption {
+  id: string;
+  name: string;
+  category: "Sedan" | "Van" | "SUV 4x4" | "Safari Jeep" | "Tuk-Tuk" | "Scenic Train";
+  capacity: number; // max passengers
+  luggageCapacity: number; // bags
+  dailyRateUSD: number;
+  estimatedFuelPerKmUSD: number;
+  imageUrl: string;
+  features: string[];
+  bestFor: string;
+  badge?: string;
+}
+
+export interface GuideOption {
+  id: string;
+  name: string;
+  title: string;
+  licenseType: "SLTDA National Guide" | "Chauffeur Tourist Guide" | "Site Specialist" | "Self-Guided (AI Assistant)";
+  languages: string[];
+  dailyRateUSD: number;
+  rating: number;
+  reviewsCount: number;
+  badge: string;
+  avatarUrl: string;
+  specialties: string[];
+  description: string;
+}
+
+export interface HotelOption {
+  id: string;
+  name: string;
+  region: string;
+  nearAttractionId?: string;
+  starRating: number;
+  guestRating: number; // out of 10
+  pricePerNightUSD: number;
+  distanceKm: number;
+  roomType: string;
+  imageUrl: string;
+  amenities: string[];
+  description: string;
+  badge?: string;
+}
+
+export interface BudgetTradeOffSuggestion {
+  id: string;
+  type: "saving" | "upgrade";
+  title: string;
+  description: string;
+  impactUSD: number; // positive for upgrade, negative for saving
+  category: "vehicle" | "hotel" | "guide" | "activity" | "route";
+  actionLabel: string;
+  applied?: boolean;
+}
+
+export interface BudgetBreakdown {
+  attractionsTotalUSD: number;
+  transportTotalUSD: number;
+  guideTotalUSD: number;
+  hotelTotalUSD: number;
+  mealsAndBufferUSD: number;
+  grandTotalUSD: number;
+  userMaxBudgetUSD: number;
+  remainingOrExcessUSD: number;
+  isWithinBudget: boolean;
+}
+
+export interface TripDates {
+  startDate: string; // "2026-11-01"
+  endDate: string; // "2026-11-03"
+  totalDays: number;
+}
+
 export interface ItineraryStop {
   id: string;
   attraction: Attraction;
@@ -50,6 +124,8 @@ export interface ItineraryStop {
 
 export interface TouristProfile {
   travelerType: TravelerType;
+  adultsCount?: number;
+  childrenCount?: number;
   originCountry: string;
   categories: string[];
   startTime: string; // "08:00"
@@ -58,6 +134,12 @@ export interface TouristProfile {
   pace: TravelPace;
   mandatoryWaypoints: string[];
   startingLocation: string;
+  tripDates?: TripDates;
+  selectedVehicleId?: string;
+  selectedGuideId?: string;
+  selectedHotels?: Record<string, string>; // nearAttractionId -> hotelId
+  appliedTradeOffIds?: string[];
+  customNotes?: string;
 }
 
 export interface DayPlanMetrics {

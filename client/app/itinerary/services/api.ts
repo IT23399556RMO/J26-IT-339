@@ -1,6 +1,6 @@
 import { TouristProfile, ItineraryStop, DQNResolution, DayPlanMetrics } from "../types";
 
-const FASTAPI_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api/v1";
+const FASTAPI_BASE_URL = process.env.NEXT_PUBLIC_FASTAPI_URL || "http://127.0.0.1:8000/api/v1";
 
 export interface ModelStatusResponse {
   success: boolean;
@@ -181,3 +181,32 @@ export async function askAssistantApi(
     return null;
   }
 }
+
+// Comprehensive AI Budget Agent Analysis via FastAPI / OpenAI
+export async function analyzeBudgetWithAiAgent(payload: {
+  traveler_type: string;
+  adults_count: number;
+  children_count: number;
+  trip_days: number;
+  max_budget_usd: number;
+  selected_places: any[];
+  vehicle: any;
+  guide: any;
+  hotels: any[];
+}): Promise<any | null> {
+  try {
+    const res = await fetch(`${FASTAPI_BASE_URL}/itinerary/ai-budget-agent`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(6000),
+    });
+
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (err) {
+    console.warn("FastAPI AI Budget Agent unreachable, utilizing built-in local engine.", err);
+    return null;
+  }
+}
+
