@@ -1,0 +1,29 @@
+[
+  {
+    "id": "a1111111-1111-1111-1111-111111111111",
+    "name": "System Administrator",
+    "email": "admin@travelmate.com",
+    "password_hash": "$2b$10$eqNMARg7pWlrMtsUD4m4oetvcQBsKRC71Qc/uM2QP1xtl1FNcHqaG",
+    "role": "admin",
+    "created_at": "2026-10-19T00:00:00.000Z",
+    "updated_at": "2026-10-19T00:00:00.000Z"
+  },
+  {
+    "id": "b2222222-2222-2222-2222-222222222222",
+    "name": "Tourist User",
+    "email": "user@travelmate.com",
+    "password_hash": "$2b$10$Spty7zMy3Vyp6ozjC18Cd.ggaKTkCcwYCt83BaZbar5jlusQ72qLi",
+    "role": "user",
+    "created_at": "2026-10-19T00:00:00.000Z",
+    "updated_at": "2026-10-19T00:00:00.000Z"
+  },
+  {
+    "id": "5d43ffd8-13d0-4c90-96d7-d98aa42872fa",
+    "name": "Nethmina Test",
+    "email": "nethmina@example.com",
+    "password_hash": "$2b$10$p9RcF4b2wGKF/PJNe/NGK.lG6hXlkG.ufQ6q3X7PrGHXF.f/r8Csu",
+    "role": "user",
+    "created_at": "2026-10-19T12:33:42.020Z",
+    "updated_at": "2026-10-19T12:33:42.020Z"
+  }
+]
