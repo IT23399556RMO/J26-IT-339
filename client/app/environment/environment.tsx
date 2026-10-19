@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import HeaderView from "../components/header/header";
 import SidebarView from "../components/sidebar/sidebar";
@@ -17,6 +17,14 @@ import {
   type DiurnalWindowSlot,
   InferenceEngineError,
 } from "../services/suitabilityService";
+import { HistoryDrawer } from "./history/history";
+import {
+  fetchHistory,
+  toggleSaveHistory,
+  deleteHistoryItem,
+  clearUnsavedHistory,
+  type HistoryItem,
+} from "../services/historyService";
 
 type TimeSlot = {
   time: string;
@@ -351,6 +359,100 @@ export default function EnvironmentView() {
     useState<SuitabilityResponse | null>(null);
   const [refreshKey, setRefreshKey] = useState<number>(0);
 
+  // Search History & Watchlist State
+  const [historyDrawerOpen, setHistoryDrawerOpen] = useState<boolean>(false);
+  const [savedHistory, setSavedHistory] = useState<HistoryItem[]>([]);
+  const [recentHistory, setRecentHistory] = useState<HistoryItem[]>([]);
+  const [unsavedHistoryCount, setUnsavedHistoryCount] = useState<number>(0);
+  const [historyLoading, setHistoryLoading] = useState<boolean>(false);
+
+  // Load history records from backend
+  const loadHistory = useCallback(async () => {
+    if (!token) return;
+    try {
+      setHistoryLoading(true);
+      const data = await fetchHistory(token);
+      setSavedHistory(data.saved);
+      setRecentHistory(data.recent);
+      setUnsavedHistoryCount(data.unsavedCount);
+    } catch (err) {
+      console.error("Failed to load search history:", err);
+    } finally {
+      setHistoryLoading(false);
+    }
+  }, [token]);
+
+  // Initial load of history on mount / token change
+  useEffect(() => {
+    let ignore = false;
+    if (!token) return;
+
+    fetchHistory(token)
+      .then((data) => {
+        if (!ignore) {
+          setSavedHistory(data.saved);
+          setRecentHistory(data.recent);
+          setUnsavedHistoryCount(data.unsavedCount);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to load search history:", err);
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [token]);
+
+  // History action handlers
+  const handleToggleSaveHistory = async (id: string) => {
+    if (!token) return;
+    try {
+      await toggleSaveHistory(id, token);
+      await loadHistory();
+    } catch (err) {
+      console.error("Failed to toggle history save:", err);
+    }
+  };
+
+  const handleDeleteHistory = async (id: string) => {
+    if (!token) return;
+    try {
+      await deleteHistoryItem(id, token);
+      await loadHistory();
+    } catch (err) {
+      console.error("Failed to delete history item:", err);
+    }
+  };
+
+  const handleClearUnsavedHistory = async () => {
+    if (!token) return;
+    try {
+      await clearUnsavedHistory(token);
+      await loadHistory();
+    } catch (err) {
+      console.error("Failed to clear unsaved history:", err);
+    }
+  };
+
+  const handleSelectFromHistory = (item: HistoryItem) => {
+    const matched = SAMPLE_DESTINATIONS.find(
+      (d) => d.name.toLowerCase() === item.destination_name.toLowerCase(),
+    );
+    if (matched) {
+      setLatitude(matched.latitude);
+      setLongitude(matched.longitude);
+    }
+    if (item.target_date) {
+      setTargetDateTime(
+        item.target_date.includes("T")
+          ? item.target_date
+          : `${item.target_date}T10:00`,
+      );
+    }
+    setHistoryDrawerOpen(false);
+  };
+
   // Trigger evaluation whenever latitude, longitude, targetDateTime, or token changes
   useEffect(() => {
     let ignore = false;
@@ -366,13 +468,23 @@ export default function EnvironmentView() {
       };
     }
 
-    fetchSuitabilityScore(latitude, longitude, token, targetDateTime)
+    const matchedDest = SAMPLE_DESTINATIONS.find(
+      (d) =>
+        Math.abs(d.latitude - latitude) < 0.005 &&
+        Math.abs(d.longitude - longitude) < 0.005,
+    );
+    const destName = matchedDest?.name;
+    const destCat = matchedDest?.activityCategory;
+
+    fetchSuitabilityScore(latitude, longitude, token, targetDateTime, destName, destCat)
       .then((data) => {
         if (!ignore) {
           setSuitabilityData(data);
           setError(null);
           setIsOffline503(false);
           setLoading(false);
+          // Re-fetch search history to reflect new evaluation
+          loadHistory();
         }
       })
       .catch((err: unknown) => {
@@ -397,7 +509,7 @@ export default function EnvironmentView() {
     return () => {
       ignore = true;
     };
-  }, [latitude, longitude, targetDateTime, token, refreshKey]);
+  }, [latitude, longitude, targetDateTime, token, refreshKey, loadHistory]);
 
   // Handler passed to destination inputs component
   const handleAnalyze = (lat: number, lon: number, datetime: string) => {
@@ -558,7 +670,20 @@ export default function EnvironmentView() {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
+                <button
+                  type="button"
+                  onClick={() => setHistoryDrawerOpen(true)}
+                  className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3.5 py-2 text-xs font-semibold text-slate-200 hover:bg-white/10 hover:text-white transition-all cursor-pointer shadow-sm hover:border-teal-400/30"
+                  title="Open Search History & Watchlist"
+                >
+                  <span className="text-teal-400">🕒</span>
+                  <span>Watchlist & History</span>
+                  <span className="rounded-full bg-teal-500/20 px-2 py-0.5 text-[10px] font-bold text-teal-300 border border-teal-500/30">
+                    {unsavedHistoryCount} / 10
+                  </span>
+                </button>
+
                 <button
                   type="button"
                   onClick={() => {
@@ -1050,6 +1175,21 @@ export default function EnvironmentView() {
 
         <FooterView />
       </div>
+
+      {/* Persistent FIFO Search History & Watchlist Drawer */}
+      <HistoryDrawer
+        isOpen={historyDrawerOpen}
+        onClose={() => setHistoryDrawerOpen(false)}
+        savedItems={savedHistory}
+        recentItems={recentHistory}
+        unsavedCount={unsavedHistoryCount}
+        maxLimit={10}
+        loading={historyLoading}
+        onToggleSave={handleToggleSaveHistory}
+        onDelete={handleDeleteHistory}
+        onClearUnsaved={handleClearUnsavedHistory}
+        onSelectDestination={handleSelectFromHistory}
+      />
     </div>
   );
 }

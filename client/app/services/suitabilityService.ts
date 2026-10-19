@@ -97,6 +97,8 @@ export async function fetchSuitabilityScore(
   longitude: number,
   token: string,
   targetDateTime?: string,
+  destinationName?: string,
+  activityCategory?: string,
 ): Promise<SuitabilityResponse> {
   const baseUrl =
     process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
@@ -111,6 +113,8 @@ export async function fetchSuitabilityScore(
       latitude,
       longitude,
       targetDateTime,
+      destinationName,
+      activityCategory,
     }),
   });
 
