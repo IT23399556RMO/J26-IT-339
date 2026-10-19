@@ -143,3 +143,35 @@ async def assistant_chat_endpoint(req: ChatRequest):
         "reply": response_text,
         "scheduleImpact": impact,
     }
+
+
+from backend_fastapi.models.openai_budget_agent import OpenAIBudgetAgent
+
+budget_agent = OpenAIBudgetAgent()
+
+
+class PlanAnalysisRequest(BaseModel):
+    traveler_type: str = "couple"
+    adults_count: int = 2
+    children_count: int = 0
+    trip_days: int = 2
+    max_budget_usd: float = 280.0
+    selected_places: List[Dict[str, Any]] = []
+    vehicle: Dict[str, Any] = {}
+    guide: Dict[str, Any] = {}
+    hotels: List[Dict[str, Any]] = []
+
+
+@router.post("/ai-budget-agent")
+async def ai_budget_agent_endpoint(req: PlanAnalysisRequest):
+    """
+    OpenAI-Powered Tourist Budget & Itinerary Planning Agent
+    Analyzes party, schedule, destinations, vehicle, guide, and stays to generate
+    an itemized budget plan with dynamic cost reduction and value upgrade trade-offs.
+    """
+    try:
+        result = budget_agent.analyze_plan(req.model_dump())
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
