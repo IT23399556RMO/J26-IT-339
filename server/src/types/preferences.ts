@@ -38,6 +38,10 @@ export interface EvaluateSuitabilityInput {
   targetDateTime?: string;
   date?: string;
   time?: string;
+  destination_name?: string;
+  destinationName?: string;
+  activity_category?: string;
+  activityCategory?: string;
 }
 
 // The strict 13-feature JSON payload required by the Python FastAPI inference engine.

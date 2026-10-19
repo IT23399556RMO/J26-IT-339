@@ -8,9 +8,9 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "db:create": "node scripts/create-db.js",
-    "migrate:up": "node-pg-migrate up",
-    "migrate:down": "node-pg-migrate down",
-    "migrate:create": "node-pg-migrate create",
+    "migrate:up": "node-pg-migrate up -m src/migrations",
+    "migrate:down": "node-pg-migrate down -m src/migrations",
+    "migrate:create": "node-pg-migrate create -m src/migrations",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

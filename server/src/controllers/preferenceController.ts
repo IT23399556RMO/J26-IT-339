@@ -498,6 +498,75 @@ export async function evaluateSuitability(
     const currentScore = Math.round(scores[targetHourIdx] ?? 80);
     const currentClass = classes[targetHourIdx] ?? "Excellent";
 
+    // Asynchronously insert record into search_history and enforce FIFO cleanup
+    (async () => {
+      try {
+        let destName = req.body?.destination_name || req.body?.destinationName;
+        let actCategory = req.body?.activity_category || req.body?.activityCategory;
+
+        if (!destName) {
+          const knownDestinations = [
+            { name: "Sigiriya", lat: 7.957, lon: 80.7603, cat: "Heritage" },
+            { name: "Kandy", lat: 7.2906, lon: 80.6337, cat: "Heritage" },
+            { name: "Nuwara Eliya", lat: 6.9497, lon: 80.7839, cat: "Hill Country" },
+            { name: "Matale", lat: 7.4723, lon: 80.6234, cat: "Heritage" },
+            { name: "Dambulla", lat: 7.85, lon: 80.65, cat: "Heritage" },
+            { name: "Horton Plains", lat: 6.8031, lon: 80.7979, cat: "Hill Country" },
+            { name: "Knuckles", lat: 7.4007, lon: 80.8106, cat: "Adventure" },
+            { name: "Adams Peak", lat: 6.8093, lon: 80.4992, cat: "Adventure" },
+            { name: "Pidurangala", lat: 7.9656, lon: 80.7618, cat: "Adventure" },
+            { name: "Peradeniya", lat: 7.2718, lon: 80.597, cat: "Heritage" },
+            { name: "Yala National Park", lat: 6.367, lon: 81.517, cat: "Wildlife" },
+            { name: "Temple of the Tooth", lat: 7.2936, lon: 80.6413, cat: "Heritage" },
+            { name: "Colombo", lat: 6.9271, lon: 79.8612, cat: "Urban Exploration" },
+          ];
+          const match = knownDestinations.find(
+            (d) => Math.abs(d.lat - lat) < 0.05 && Math.abs(d.lon - lon) < 0.05,
+          );
+          if (match) {
+            destName = match.name;
+            if (!actCategory) actCategory = match.cat;
+          } else {
+            destName = `Location (${lat.toFixed(2)}, ${lon.toFixed(2)})`;
+          }
+        }
+
+        if (!actCategory) {
+          actCategory = "General Sightseeing";
+        }
+
+        const MAX_HISTORY_LIMIT = 10;
+        await pool.query(
+          `INSERT INTO search_history (
+             user_id,
+             destination_name,
+             activity_category,
+             target_date,
+             suitability_score,
+             is_saved
+           )
+           VALUES ($1, $2, $3, $4, $5, false);`,
+          [userId, destName, actCategory, targetDateStr, currentScore],
+        );
+
+        // FIFO cleanup query: keep at most MAX_HISTORY_LIMIT unsaved records per user
+        await pool.query(
+          `DELETE FROM search_history
+           WHERE user_id = $1
+             AND is_saved = false
+             AND id NOT IN (
+               SELECT id FROM search_history
+               WHERE user_id = $1 AND is_saved = false
+               ORDER BY created_at DESC
+               LIMIT $2
+             );`,
+          [userId, MAX_HISTORY_LIMIT],
+        );
+      } catch (histErr) {
+        console.error("Failed to record search history / FIFO cleanup:", histErr);
+      }
+    })();
+
     // Convert solar radiation to UV Index approximation
     const uvIndex = Math.max(
       0,
