@@ -17,7 +17,6 @@ import {
   X,
   ShieldCheck,
   MapPin,
-  Cpu,
 } from "lucide-react";
 
 interface ProfileViewProps {
@@ -86,33 +85,6 @@ export default function ProfileView({
 
   return (
     <div className="space-y-6">
-      {/* Header Info Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-teal-500/20 via-sky-500/10 to-transparent p-5 sm:p-6 border border-teal-500/30 backdrop-blur-xl">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div>
-            <div className="inline-flex items-center gap-1.5 rounded-full bg-teal-400/15 px-3 py-1 text-xs font-semibold text-teal-300 ring-1 ring-teal-400/30">
-              <Cpu className="h-3.5 w-3.5 text-teal-400 animate-pulse" />
-              Supervised Random Forest & DQN Optimizer
-            </div>
-            <h2 className="mt-2 text-xl sm:text-2xl font-bold tracking-tight text-white">
-              Itinerary Optimization Profile
-            </h2>
-            <p className="mt-1 text-xs sm:text-sm text-slate-300 max-w-xl">
-              Configured with 33,394 TripAdvisor reviews, VADER sentiment polarity, and
-              OpenRouteService transit matrix for 77 Sri Lankan attractions.
-            </p>
-          </div>
-
-          <div className="flex sm:flex-col items-center sm:items-end gap-2 text-xs">
-            <span className="rounded-lg bg-white/10 px-2.5 py-1 text-slate-200 font-mono">
-              Target MAE ≤ 0.70
-            </span>
-            <span className="rounded-lg bg-emerald-500/20 text-emerald-300 px-2.5 py-1 font-mono ring-1 ring-emerald-500/30">
-              0% Violation Rate
-            </span>
-          </div>
-        </div>
-      </div>
 
       {/* 1. Traveller Classification */}
       <div className="rounded-3xl border border-white/10 bg-slate-900/60 p-5 sm:p-6 backdrop-blur-xl shadow-xl">

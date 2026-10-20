@@ -62,9 +62,6 @@ export default function DayPlanView({
               Optimized Day Plan
             </h2>
           </div>
-          <p className="text-xs sm:text-sm text-slate-400">
-            Dynamically sequenced by Deep Q-Network • Verified for 0% Constraint Violations
-          </p>
         </div>
 
         <div className="flex items-center gap-2">

@@ -39,9 +39,8 @@ export default function SidebarView({ open = false, onClose }: SidebarViewProps)
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-white/10 bg-slate-950/95 backdrop-blur-xl transition-transform duration-300 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 ${
-          open ? "translate-x-0" : "-translate-x-full"
-        }`}
+        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-white/10 bg-slate-950/95 backdrop-blur-xl transition-transform duration-300 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 ${open ? "translate-x-0" : "-translate-x-full"
+          }`}
       >
         {/* Brand */}
         <div className="flex h-16 items-center justify-between border-b border-white/10 px-5">
@@ -81,17 +80,15 @@ export default function SidebarView({ open = false, onClose }: SidebarViewProps)
                     href={item.href}
                     onClick={onClose}
                     aria-current={active ? "page" : undefined}
-                    className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors focus-visible:outline-2 focus-visible:outline-teal-400 ${
-                      active
+                    className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors focus-visible:outline-2 focus-visible:outline-teal-400 ${active
                         ? "bg-teal-400/15 text-white ring-1 ring-teal-400/30"
                         : "text-slate-300 hover:bg-white/5 hover:text-white"
-                    }`}
+                      }`}
                   >
                     <span
                       aria-hidden="true"
-                      className={`flex h-9 w-9 items-center justify-center rounded-lg text-lg transition-colors ${
-                        active ? "bg-teal-400/20" : "bg-white/5 group-hover:bg-white/10"
-                      }`}
+                      className={`flex h-9 w-9 items-center justify-center rounded-lg text-lg transition-colors ${active ? "bg-teal-400/20" : "bg-white/5 group-hover:bg-white/10"
+                        }`}
                     >
                       {item.icon}
                     </span>

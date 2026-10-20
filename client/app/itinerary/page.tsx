@@ -301,19 +301,9 @@ export default function ItineraryPage({
                 🗺️
               </span>
               <div>
-                <div className="flex items-center gap-2">
-                  <h1 className="text-xl font-bold tracking-tight text-white">
-                    Adaptive & Explainable Itinerary Optimizer
-                  </h1>
-                  <button
-                    type="button"
-                    onClick={() => setIsEvalModalOpen(true)}
-                    className="flex items-center gap-1.5 rounded-full border border-teal-500/30 bg-teal-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-teal-300 hover:bg-teal-500/20 transition-all cursor-pointer"
-                  >
-                    <Cpu className="h-3 w-3 text-teal-400 animate-pulse" />
-                    <span>ML Models & Benchmarks</span>
-                  </button>
-                </div>
+                <h1 className="text-xl font-bold tracking-tight text-white">
+                  Adaptive & Explainable Itinerary Optimizer
+                </h1>
               </div>
             </div>
 
@@ -381,7 +371,7 @@ export default function ItineraryPage({
             <div>
               <div className="flex items-center gap-1.5">
                 <span className="text-[10px] uppercase font-bold tracking-widest text-teal-400">
-                  Component 3 • Itinerary AI
+                  Itinerary AI
                 </span>
                 <span
                   className={`h-1.5 w-1.5 rounded-full ${
@@ -398,14 +388,6 @@ export default function ItineraryPage({
             </div>
 
             <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setIsEvalModalOpen(true)}
-                className="flex items-center gap-1 rounded-xl bg-teal-500/20 px-2 py-1 text-[11px] font-bold text-teal-300 ring-1 ring-teal-500/30"
-              >
-                <Cpu className="h-3 w-3" />
-                <span>ML Status</span>
-              </button>
               <span className="rounded-full bg-white/10 px-2 py-1 text-[11px] font-mono text-slate-300 border border-white/10">
                 {stops.length} Stops
               </span>
@@ -422,9 +404,6 @@ export default function ItineraryPage({
                     <Sparkles className="h-4 w-4 text-teal-400" />
                     Sri Lanka Travel Itinerary & Budget Optimization
                   </h2>
-                  <p className="text-xs text-slate-400">
-                    Powered by Component 3 OpenAI Autonomous Agent & Deep Q-Network Policy
-                  </p>
                 </div>
 
                 <div className="flex items-center gap-2 rounded-xl bg-slate-950 p-1 border border-white/10">
