@@ -19,13 +19,13 @@ if exist "C:\Python314\python.exe" (
 )
 
 echo [1/3] Starting FastAPI AI Backend (Port 8000)...
-start "TravelMate - FastAPI Backend (:8000)" /D "%PROJECT_DIR%backend_fastapi" cmd /k ""%PYTHON_EXE%" run_server.py"
+start "TravelMate - FastAPI Backend (:8000)" /D "%PROJECT_DIR%backend_fastapi" cmd /k "%PYTHON_EXE% run_server.py"
 
 echo [2/3] Starting Express Auth/Data Server (Port 5001)...
-start "TravelMate - Express Server (:5001)" /D "%PROJECT_DIR%server" cmd /k "npm run dev"
+start "TravelMate - Express Server (:5001)" /D "%PROJECT_DIR%server" cmd /k npm run dev
 
 echo [3/3] Starting Next.js Frontend Client (Port 3000)...
-start "TravelMate - Next.js Client (:3000)" /D "%PROJECT_DIR%client" cmd /k "npm run dev"
+start "TravelMate - Next.js Client (:3000)" /D "%PROJECT_DIR%client" cmd /k npm run dev
 
 echo.
 echo ========================================================
