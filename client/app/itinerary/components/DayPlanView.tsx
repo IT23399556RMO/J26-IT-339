@@ -41,10 +41,18 @@ export default function DayPlanView({
   const [activeStopIndex, setActiveStopIndex] = useState(0);
   const [expandedXaiId, setExpandedXaiId] = useState<string | null>(stops[0]?.id || null);
 
-  const totalCost = stops.reduce((sum, s) => sum + s.costUSD, 0);
-  const totalDistance = stops.reduce((sum, s) => sum + s.transitDistanceKmFromPrev, 0);
+  const totalCost = stops.reduce((sum, s) => sum + (s.costUSD || 0), 0);
+  const rawTotalDistance = stops.reduce((sum, s) => sum + (s.transitDistanceKmFromPrev || 0), 0);
+  const formattedDistance = Number(rawTotalDistance.toFixed(1));
+  const totalTransitMinutes = stops.reduce((sum, s) => sum + (s.transitMinutesFromPrev || 0), 0);
+  const transitHours = Math.floor(totalTransitMinutes / 60);
+  const transitMinsRemaining = totalTransitMinutes % 60;
+  const transitTimeFormatted =
+    transitHours > 0
+      ? `${transitHours}h ${transitMinsRemaining}m`
+      : `${transitMinsRemaining}m`;
   const avgEnjoyment = (
-    stops.reduce((sum, s) => sum + s.predictedEnjoyment, 0) / (stops.length || 1)
+    stops.reduce((sum, s) => sum + (s.predictedEnjoyment || 0), 0) / (stops.length || 1)
   ).toFixed(2);
 
   const toggleXai = (id: string) => {
@@ -84,59 +92,81 @@ export default function DayPlanView({
       </div>
 
       {/* Metric Cards Bar */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
         {/* Satisfaction */}
-        <div className="rounded-2xl border border-teal-500/30 bg-teal-500/10 p-3.5 backdrop-blur-xl">
-          <span className="text-[11px] font-semibold text-teal-300 uppercase tracking-wider block">
-            Satisfaction Score
-          </span>
-          <div className="mt-1 flex items-baseline gap-1.5">
-            <span className="text-2xl font-black text-white">{avgEnjoyment}</span>
-            <span className="text-xs text-teal-400 font-bold">/ 5.0 ★</span>
+        <div className="min-w-0 rounded-2xl border border-teal-500/30 bg-teal-500/10 p-3 sm:p-3.5 backdrop-blur-xl overflow-hidden flex flex-col justify-between transition-all hover:border-teal-500/50">
+          <div className="flex items-center justify-between gap-1">
+            <span className="text-[10px] sm:text-[11px] font-semibold text-teal-300 uppercase tracking-wider block truncate">
+              Satisfaction Score
+            </span>
+            <Sparkles className="h-3.5 w-3.5 text-teal-400 shrink-0 opacity-80" />
           </div>
-          <span className="text-[10px] text-teal-200/80 mt-0.5 block">
+          <div className="mt-1 flex items-baseline gap-1.5 min-w-0">
+            <span className="text-xl sm:text-2xl font-black text-white tracking-tight truncate">
+              {avgEnjoyment}
+            </span>
+            <span className="text-xs text-teal-400 font-bold shrink-0">/ 5.0 ★</span>
+          </div>
+          <span className="text-[10px] text-teal-200/80 mt-0.5 block truncate">
             97% predicted enjoyment
           </span>
         </div>
 
         {/* Total Cost */}
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-3.5 backdrop-blur-xl">
-          <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
-            Total Cost
-          </span>
-          <div className="mt-1 flex items-baseline gap-1">
-            <span className="text-2xl font-black text-white">${totalCost}</span>
-            <span className="text-xs text-slate-400">/ ${profile.maxBudgetUSD}</span>
+        <div className="min-w-0 rounded-2xl border border-white/10 bg-white/5 p-3 sm:p-3.5 backdrop-blur-xl overflow-hidden flex flex-col justify-between transition-all hover:border-white/20">
+          <div className="flex items-center justify-between gap-1">
+            <span className="text-[10px] sm:text-[11px] font-semibold text-slate-400 uppercase tracking-wider block truncate">
+              Total Cost
+            </span>
+            <DollarSign className="h-3.5 w-3.5 text-emerald-400 shrink-0 opacity-80" />
           </div>
-          <span className="text-[10px] text-emerald-400 mt-0.5 block">
-            ${profile.maxBudgetUSD - totalCost} within budget
+          <div className="mt-1 flex items-baseline gap-1 min-w-0">
+            <span className="text-xl sm:text-2xl font-black text-white tracking-tight truncate">
+              ${totalCost}
+            </span>
+            <span className="text-xs text-slate-400 shrink-0 truncate">
+              / ${profile.maxBudgetUSD}
+            </span>
+          </div>
+          <span className="text-[10px] text-emerald-400 mt-0.5 block truncate">
+            ${Math.max(0, profile.maxBudgetUSD - totalCost)} within budget
           </span>
         </div>
 
-        {/* Distance & Transit */}
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-3.5 backdrop-blur-xl">
-          <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
-            Total Distance
-          </span>
-          <div className="mt-1 flex items-baseline gap-1">
-            <span className="text-2xl font-black text-white">{totalDistance}</span>
-            <span className="text-xs text-slate-400">km</span>
+        {/* Total Distance & Transit */}
+        <div className="min-w-0 rounded-2xl border border-sky-500/30 bg-sky-500/10 p-3 sm:p-3.5 backdrop-blur-xl overflow-hidden flex flex-col justify-between transition-all hover:border-sky-500/50 shadow-sm">
+          <div className="flex items-center justify-between gap-1">
+            <span className="text-[10px] sm:text-[11px] font-semibold text-sky-300 uppercase tracking-wider block truncate">
+              Total Distance
+            </span>
+            <Car className="h-3.5 w-3.5 text-sky-400 shrink-0 opacity-80" />
           </div>
-          <span className="text-[10px] text-sky-400 mt-0.5 block">
-            OpenRouteService verified
+          <div className="mt-1 flex items-baseline gap-1 min-w-0">
+            <span className="text-xl sm:text-2xl font-black text-white tracking-tight truncate">
+              {formattedDistance}
+            </span>
+            <span className="text-xs text-sky-300 font-semibold shrink-0">km</span>
+          </div>
+          <span className="text-[10px] text-sky-300/90 mt-0.5 block truncate">
+            {transitTimeFormatted} drive • ORS verified
           </span>
         </div>
 
-        {/* Feasibility Guarantee */}
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-3.5 backdrop-blur-xl">
-          <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
-            Feasibility Status
-          </span>
-          <div className="mt-1 flex items-center gap-1.5">
-            <CheckCircle2 className="h-5 w-5 text-emerald-400" />
-            <span className="text-lg font-black text-emerald-400">100% Valid</span>
+        {/* Feasibility Status */}
+        <div className="min-w-0 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-3 sm:p-3.5 backdrop-blur-xl overflow-hidden flex flex-col justify-between transition-all hover:border-emerald-500/50">
+          <div className="flex items-center justify-between gap-1">
+            <span className="text-[10px] sm:text-[11px] font-semibold text-emerald-300 uppercase tracking-wider block truncate">
+              Feasibility Status
+            </span>
+            <ShieldCheck className="h-3.5 w-3.5 text-emerald-400 shrink-0 opacity-80" />
           </div>
-          <span className="text-[10px] text-slate-400 mt-0.5 block">
+          <div className="mt-1 flex items-center gap-1.5 min-w-0">
+            <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-400 shrink-0" />
+            <span className="text-base sm:text-lg font-black text-emerald-400 truncate">
+              100% Valid
+            </span>
+          </div>
+          <span className="text-[10px] text-slate-400 mt-0.5 block truncate">
             0% Constraint Violation
           </span>
         </div>
@@ -175,13 +205,12 @@ export default function DayPlanView({
               <div key={stop.id} className="relative">
                 {/* Connecting Transit Line to next stop */}
                 {idx > 0 && (
-                  <div className="mb-4 ml-6 sm:ml-8 flex items-center gap-3 border-l-2 border-dashed border-teal-500/30 pl-4 py-1 text-xs text-slate-400">
-                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-800 text-teal-400">
-                      <Car className="h-3.5 w-3.5" />
+                  <div className="mb-4 ml-3 sm:ml-8 flex items-center gap-2.5 sm:gap-3 border-l-2 border-dashed border-teal-500/30 pl-3 sm:pl-4 py-1 text-xs text-slate-400 min-w-0">
+                    <div className="flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-full bg-slate-800 text-teal-400 shrink-0">
+                      <Car className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                     </div>
-                    <span>
-                      🚗 {stop.transitMinutesFromPrev} mins drive ({stop.transitDistanceKmFromPrev} km)
-                      via topographical transit routing
+                    <span className="break-words text-[11px] sm:text-xs min-w-0 leading-relaxed">
+                      🚗 {stop.transitMinutesFromPrev} mins drive ({Number((stop.transitDistanceKmFromPrev || 0).toFixed(1))} km) via topographical routing
                     </span>
                   </div>
                 )}

@@ -370,7 +370,7 @@ class DQNOptimizer:
                 "dwellMinutes": attr["typical_dwell_minutes"],
                 "costUSD": attr["foreigner_fee_usd"],
                 "transitMinutesFromPrev": item["transit_min"],
-                "transitDistanceKmFromPrev": item["distance_km"],
+                "transitDistanceKmFromPrev": round(float(item["distance_km"]), 1),
                 "predictedEnjoyment": pred_score,
                 "xaiExplanation": {
                     "archetypeMatch": xai["archetype_match"],
