@@ -314,22 +314,6 @@ export default function ItineraryPage({
                     <span>ML Models & Benchmarks</span>
                   </button>
                 </div>
-                <div className="flex items-center gap-2 text-xs text-slate-400">
-                  <span>SLIIT J26-IT-339</span>
-                  <span>•</span>
-                  <span className="flex items-center gap-1">
-                    <span
-                      className={`h-2 w-2 rounded-full ${
-                        isBackendConnected ? "bg-emerald-400" : "bg-amber-400"
-                      }`}
-                    />
-                    <span className="font-mono text-[11px]">
-                      {isBackendConnected
-                        ? "FastAPI (Python) Connected :8000"
-                        : "Local ML Optimizer"}
-                    </span>
-                  </span>
-                </div>
               </div>
             </div>
 

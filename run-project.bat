@@ -10,8 +10,16 @@ echo.
 
 set "PROJECT_DIR=%~dp0"
 
+REM Resolve Python interpreter
+set "PYTHON_EXE=python"
+if exist "C:\Python314\python.exe" (
+    set "PYTHON_EXE=C:\Python314\python.exe"
+) else if exist "%PROJECT_DIR%backend_fastapi\venv\Scripts\python.exe" (
+    set "PYTHON_EXE=%PROJECT_DIR%backend_fastapi\venv\Scripts\python.exe"
+)
+
 echo [1/3] Starting FastAPI AI Backend (Port 8000)...
-start "TravelMate - FastAPI Backend (:8000)" /D "%PROJECT_DIR%backend_fastapi" cmd /k ".\venv\Scripts\python.exe run_server.py"
+start "TravelMate - FastAPI Backend (:8000)" /D "%PROJECT_DIR%backend_fastapi" cmd /k ""%PYTHON_EXE%" run_server.py"
 
 echo [2/3] Starting Express Auth/Data Server (Port 5001)...
 start "TravelMate - Express Server (:5001)" /D "%PROJECT_DIR%server" cmd /k "npm run dev"

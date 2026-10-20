@@ -9,6 +9,7 @@ import os
 import time
 import json
 import joblib
+import re
 import numpy as np
 import pandas as pd
 from typing import List, Dict, Any, Tuple, Optional
@@ -114,12 +115,17 @@ class DQNOptimizer:
             return self._cache[cache_key]
 
         score = None
+        clean_country = re.sub(r"[^\w\s]", "", origin_country).strip() if isinstance(origin_country, str) else "International"
+        clean_type = traveler_type.lower().strip() if isinstance(traveler_type, str) else "couple"
+        if not clean_country:
+            clean_country = "International"
+
         if self.rf_model is not None:
             try:
                 df = pd.DataFrame([{
                     "category": attraction["category"],
-                    "traveler_type": traveler_type,
-                    "origin_country": origin_country,
+                    "traveler_type": clean_type,
+                    "origin_country": clean_country,
                     "vader_sentiment": attraction.get("vader_sentiment", 0.92),
                     "foreigner_fee_usd": attraction["foreigner_fee_usd"],
                     "typical_dwell_minutes": attraction["typical_dwell_minutes"],
