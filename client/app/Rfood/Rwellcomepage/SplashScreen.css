@@ -1,0 +1,369 @@
+
+* {
+  box-sizing: border-box;
+}
+
+.splash {
+  min-height: 100vh;
+  width: 100%;
+
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  overflow: hidden;
+
+  background:
+    linear-gradient(
+      rgba(3, 45, 25, 0.68),
+      rgba(3, 45, 25, 0.68)
+    ),
+    url("./food.jpg");
+
+  background-size: cover;
+  background-position: center;
+
+  color: white;
+
+  font-family:
+    "Poppins",
+    "Segoe UI",
+    Arial,
+    sans-serif;
+}
+
+
+/* =================================
+   HERO SECTION
+================================= */
+
+.hero {
+  position: relative;
+
+  z-index: 2;
+
+  text-align: center;
+
+  margin-top: 8vh;
+
+  padding: 0 20px;
+}
+
+
+/* =================================
+   TITLE
+================================= */
+
+.title {
+  margin: 0;
+
+  font-size: clamp(45px, 6vw, 75px);
+
+  font-weight: 700;
+
+  letter-spacing: -2px;
+}
+
+.title span {
+  color: #7cff91;
+}
+
+
+/* =================================
+   SUBTITLE
+================================= */
+
+.subtitle {
+  margin-top: 20px;
+
+  font-size: clamp(20px, 3vw, 30px);
+
+  font-weight: 600;
+
+  line-height: 1.35;
+}
+
+
+/* =================================
+   DESCRIPTION
+================================= */
+
+.description {
+  margin-top: 20px;
+
+  font-size: 16px;
+
+  line-height: 1.7;
+
+  color: #f0f5f1;
+}
+
+
+/* =================================
+   BUTTON CONTAINER
+================================= */
+
+.main-buttons {
+  position: absolute;
+
+  left: 50%;
+
+  bottom: 18%;
+
+  transform: translateX(-50%);
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  gap: 14px;
+
+  width: 100%;
+
+  z-index: 5;
+}
+
+
+/* =================================
+   AI IMAGE BUTTON
+================================= */
+
+.ai-image-button {
+  width: 260px;
+
+  height: 55px;
+
+  border: none;
+
+  border-radius: 13px;
+
+  background: #36a447;
+
+  color: white;
+
+  font-size: 17px;
+
+  font-weight: 700;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 6px 18px rgba(0, 0, 0, 0.25);
+
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.ai-image-button:hover {
+  background: #278b37;
+
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 9px 23px rgba(0, 0, 0, 0.3);
+}
+
+.ai-image-button:active {
+  transform: translateY(0);
+}
+
+
+/* =================================
+   BOTTOM TWO BUTTONS
+================================= */
+
+.bottom-buttons {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 14px;
+}
+
+
+/* =================================
+   SMALL BUTTONS
+================================= */
+
+.small-button {
+  width: 123px;
+
+  height: 48px;
+
+  border: 2px solid #36a447;
+
+  border-radius: 12px;
+
+  background: white;
+
+  color: #238b35;
+
+  font-size: 14px;
+
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.small-button:hover {
+  background: #36a447;
+
+  color: white;
+
+  transform: translateY(-2px);
+}
+
+.small-button:active {
+  transform: translateY(0);
+}
+
+
+/* =================================
+   TAGLINE
+================================= */
+
+.tagline {
+  position: absolute;
+
+  bottom: 5%;
+
+  z-index: 2;
+
+  margin: 0;
+
+  font-size: 14px;
+
+  color: #e5eee7;
+
+  letter-spacing: 0.5px;
+}
+
+
+/* =================================
+   TABLET
+================================= */
+
+@media (max-width: 900px) {
+
+  .hero {
+    margin-top: 9vh;
+  }
+
+  .main-buttons {
+    bottom: 17%;
+  }
+
+}
+
+
+/* =================================
+   MOBILE
+================================= */
+
+@media (max-width: 600px) {
+
+  .splash {
+    min-height: 100svh;
+  }
+
+  .hero {
+    margin-top: 7vh;
+
+    padding: 0 15px;
+  }
+
+  .title {
+    font-size: 42px;
+
+    letter-spacing: -1px;
+  }
+
+  .subtitle {
+    margin-top: 15px;
+
+    font-size: 21px;
+  }
+
+  .description {
+    margin-top: 15px;
+
+    font-size: 14px;
+
+    line-height: 1.6;
+  }
+
+  .main-buttons {
+    bottom: 17%;
+
+    gap: 12px;
+  }
+
+  .ai-image-button {
+    width: 230px;
+
+    height: 52px;
+
+    font-size: 16px;
+  }
+
+  .bottom-buttons {
+    gap: 10px;
+  }
+
+  .small-button {
+    width: 110px;
+
+    height: 46px;
+
+    font-size: 13px;
+  }
+
+  .tagline {
+    bottom: 4%;
+
+    font-size: 12px;
+  }
+
+}
+
+
+/* =================================
+   SMALL MOBILE
+================================= */
+
+@media (max-width: 380px) {
+
+  .title {
+    font-size: 36px;
+  }
+
+  .subtitle {
+    font-size: 18px;
+  }
+
+  .description {
+    font-size: 13px;
+  }
+
+  .ai-image-button {
+    width: 210px;
+  }
+
+  .small-button {
+    width: 100px;
+  }
+
+}

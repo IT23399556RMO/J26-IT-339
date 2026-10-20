@@ -1,0 +1,290 @@
+
+* {
+  box-sizing: border-box;
+}
+
+.allergy-list-page {
+  min-height: 100vh;
+  padding: 32px 5%;
+  background: #f5f8f6;
+  color: #173c2d;
+  font-family: "Poppins", "Segoe UI", Arial, sans-serif;
+}
+
+.allergy-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 28px;
+}
+
+.allergy-list-header h1 {
+  margin: 0 0 8px;
+  font-size: clamp(24px, 3vw, 34px);
+}
+
+.allergy-list-header p {
+  margin: 0;
+  color: #64746b;
+}
+
+.add-allergy-link,
+.edit-form-actions button {
+  display: inline-block;
+  padding: 12px 18px;
+  border: none;
+  border-radius: 8px;
+  background: #176b45;
+  color: white;
+  text-decoration: none;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.edit-allergy-form,
+.allergy-records {
+  padding: 24px;
+  margin-bottom: 24px;
+  background: white;
+  border: 1px solid #e0e9e3;
+  border-radius: 14px;
+  box-shadow: 0 4px 15px rgba(20, 60, 40, 0.04);
+}
+
+.edit-allergy-form h2,
+.records-heading h2 {
+  margin-top: 0;
+}
+
+.allergy-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.allergy-form-grid label,
+.full-width-label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 18px;
+  font-weight: 600;
+}
+
+.allergy-form-grid input,
+.allergy-form-grid select,
+.full-width-label textarea,
+.allergy-search {
+  width: 100%;
+  min-width: 0;
+  padding: 11px 12px;
+  border: 1px solid #d5e0d8;
+  border-radius: 7px;
+  background: #fff;
+  color: #173c2d;
+  font: inherit;
+}
+
+.allergy-form-grid input:focus,
+.allergy-form-grid select:focus,
+.full-width-label textarea:focus,
+.allergy-search:focus {
+  outline: 2px solid #b5dfc6;
+  border-color: #176b45;
+}
+
+.symptoms-fieldset {
+  margin: 0 0 20px;
+  padding: 16px;
+  border: 1px solid #d5e0d8;
+  border-radius: 8px;
+}
+
+.symptom-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.symptom-option {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.edit-form-actions,
+.record-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.edit-form-actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.edit-form-actions .cancel-button {
+  background: #e8eee9;
+  color: #244634;
+}
+
+.records-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 20px;
+}
+
+.records-heading h2 {
+  margin-bottom: 0;
+}
+
+.allergy-search {
+  max-width: 340px;
+}
+
+.allergy-table-wrapper {
+  overflow-x: auto;
+  width: 100%;
+}
+
+.allergy-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.allergy-table th,
+.allergy-table td {
+  padding: 14px 12px;
+  border-bottom: 1px solid #e7eee9;
+  vertical-align: middle;
+}
+
+.allergy-table th {
+  background: #f1f7f3;
+  color: #315643;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.allergy-table td {
+  font-size: 14px;
+}
+
+.allergy-table tbody tr:hover {
+  background: #f9fcfa;
+}
+
+.severity-badge {
+  display: inline-block;
+  padding: 5px 9px;
+  border-radius: 20px;
+  background: #edf0ee;
+  color: #394b40;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.severity-high,
+.severity-severe {
+  background: #fee2e2;
+  color: #b42318;
+}
+
+.severity-moderate {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.severity-low {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.record-actions button {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.edit-button {
+  background: #176b45;
+}
+
+.delete-button {
+  background: #dc3545;
+}
+
+.success-message,
+.error-message {
+  padding: 13px 16px;
+  margin-bottom: 18px;
+  border-radius: 8px;
+}
+
+.success-message {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.error-message {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.list-status {
+  padding: 28px 0;
+  color: #64746b;
+  text-align: center;
+}
+
+@media (max-width: 850px) {
+  .allergy-list-page {
+    padding: 24px 4%;
+  }
+
+  .allergy-table {
+    min-width: 850px;
+  }
+
+  .records-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .allergy-search {
+    max-width: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .allergy-list-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .add-allergy-link {
+    text-align: center;
+  }
+
+  .allergy-form-grid {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .edit-allergy-form,
+  .allergy-records {
+    padding: 16px;
+  }
+
+  .symptom-options {
+    flex-direction: column;
+  }
+}

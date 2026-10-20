@@ -1,0 +1,317 @@
+* {
+  box-sizing: border-box;
+}
+
+.allergy-page {
+  min-height: 100vh;
+  background: #f4f8f6;
+  padding: 50px 20px;
+  color: #18352b;
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+}
+
+.allergy-container {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.allergy-header {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 30px;
+}
+
+.header-icon {
+  width: 58px;
+  height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 18px;
+  background: #dff3e9;
+  color: #0b6b4f;
+  font-size: 27px;
+}
+
+.allergy-header h1 {
+  margin: 0;
+  color: #0b6b4f;
+  font-size: 34px;
+  font-weight: 750;
+}
+
+.allergy-header p {
+  margin: 7px 0 0;
+  color: #687770;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.success-message {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 22px;
+  padding: 17px 20px;
+  border: 1px solid #bce6cf;
+  border-radius: 14px;
+  background: #edfaf2;
+  color: #176b46;
+}
+
+.success-message > span {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #0b6b4f;
+  color: white;
+  font-weight: bold;
+}
+
+.success-message p {
+  margin: 3px 0 0;
+  font-size: 13px;
+}
+
+.allergy-card {
+  background: white;
+  padding: 38px;
+  border-radius: 26px;
+  box-shadow:
+    0 10px 35px rgba(21, 69, 53, 0.08),
+    0 2px 8px rgba(21, 69, 53, 0.04);
+  border: 1px solid #e7eeea;
+}
+
+.form-group {
+  margin-bottom: 25px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 9px;
+  color: #28463b;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.form-group label span {
+  color: #d93636;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  border: 1px solid #d6e1dc;
+  border-radius: 12px;
+  background: #fbfcfc;
+  color: #243b32;
+  font-family: inherit;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.form-group input,
+.form-group select {
+  height: 50px;
+  padding: 0 15px;
+}
+
+.form-group textarea {
+  padding: 14px 15px;
+  resize: vertical;
+  min-height: 100px;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: #0b6b4f;
+  background: white;
+  box-shadow: 0 0 0 4px rgba(11, 107, 79, 0.09);
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+  color: #a0aaa6;
+}
+
+.warning-box {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 14px;
+  border: 1px solid #f2b8b5;
+  border-radius: 12px;
+  background: #fff3f2;
+  color: #8c2925;
+}
+
+.warning-icon {
+  font-size: 21px;
+}
+
+.warning-box strong {
+  display: block;
+  font-size: 14px;
+  color: #a52c27;
+}
+
+.warning-box p {
+  margin: 4px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.symptoms-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.symptom-option {
+  display: flex !important;
+  align-items: center;
+  gap: 9px;
+  margin: 0 !important;
+  padding: 12px 13px;
+  border: 1px solid #dce6e1;
+  border-radius: 10px;
+  background: #fafcfb;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.symptom-option:hover {
+  border-color: #80b9a3;
+}
+
+.symptom-option.selected {
+  border-color: #0b6b4f;
+  background: #eaf7f0;
+  color: #0b6b4f;
+}
+
+.symptom-option input {
+  width: 17px !important;
+  height: 17px !important;
+  accent-color: #0b6b4f;
+  cursor: pointer;
+}
+
+.symptom-option span {
+  color: inherit;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.save-button {
+  width: 100%;
+  height: 58px;
+  margin-top: 8px;
+  border: none;
+  border-radius: 14px;
+  background: #0b6b4f;
+  color: white;
+  font-family: inherit;
+  font-size: 17px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 7px 18px rgba(11, 107, 79, 0.2);
+  transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.save-button span {
+  margin-right: 9px;
+}
+
+.save-button:hover {
+  background: #09583f;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 23px rgba(11, 107, 79, 0.25);
+}
+
+.privacy-note {
+  text-align: center;
+  margin: 20px 0 0;
+  color: #82908a;
+  font-size: 12px;
+}
+
+@media (max-width: 700px) {
+  .allergy-page {
+    padding: 30px 15px;
+  }
+
+  .allergy-header h1 {
+    font-size: 27px;
+  }
+
+  .allergy-card {
+    padding: 25px 20px;
+    border-radius: 20px;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .symptoms-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .allergy-page {
+    padding: 22px 12px;
+  }
+
+  .allergy-header {
+    align-items: flex-start;
+  }
+
+  .header-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+
+  .allergy-header h1 {
+    font-size: 23px;
+    line-height: 1.2;
+  }
+
+  .allergy-header p {
+    font-size: 13px;
+  }
+
+  .allergy-card {
+    padding: 22px 16px;
+    border-radius: 18px;
+  }
+
+  .symptoms-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .save-button {
+    height: 54px;
+    font-size: 15px;
+  }
+}
