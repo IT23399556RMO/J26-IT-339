@@ -144,7 +144,7 @@ export default function AdminSidebarView({
           <p className="mt-1 text-xs text-slate-300">
             Switch back to user mode anytime.
           </p>
-          <Link
+          <Link   
             href="/home"
             className="mt-3 flex items-center justify-center gap-1.5 rounded-xl bg-white/10 py-2 text-xs font-semibold text-white transition-colors hover:bg-white/15"
           >
