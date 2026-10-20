@@ -13,6 +13,11 @@ export default function Result() {
   const [recipeLoading, setRecipeLoading] = useState(true);
   const [recipeError, setRecipeError] = useState("");
 
+  // Allergy checking states
+  const [allergyResult, setAllergyResult] = useState(null);
+  const [allergyLoading, setAllergyLoading] = useState(true);
+  const [allergyError, setAllergyError] = useState("");
+
   useEffect(() => {
     let cancelled = false;
 
@@ -28,25 +33,35 @@ export default function Result() {
 
       try {
         parsedResult = JSON.parse(savedResult);
-        setResult(parsedResult);
+
+        if (!parsedResult || typeof parsedResult !== "object") {
+          throw new Error("Invalid food result");
+        }
+
+        if (!cancelled) {
+          setResult(parsedResult);
+        }
       } catch (error) {
         console.error("Invalid food result:", error);
         router.replace("/Rfood/foodUploadpage");
         return;
       }
 
-      const foodName = String(
-        parsedResult.food_name || ""
-      )
+      const foodName = String(parsedResult.food_name || "")
         .replaceAll("_", " ")
         .trim();
 
       if (!foodName) {
-        setRecipeLoading(false);
-        setRecipeError("Food name is unavailable.");
+        if (!cancelled) {
+          setRecipeLoading(false);
+          setRecipeError("Food name is unavailable.");
+          setAllergyLoading(false);
+          setAllergyError("Food name is unavailable.");
+        }
         return;
       }
 
+      // 1. Load recipe details
       try {
         const response = await fetch(
           `/api/recipes?foodName=${encodeURIComponent(foodName)}`,
@@ -75,6 +90,43 @@ export default function Result() {
       } finally {
         if (!cancelled) {
           setRecipeLoading(false);
+        }
+      }
+
+      // 2. Check predicted food against saved allergy records
+      try {
+        const response = await fetch("/api/check-food-allergy", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ foodName }),
+          cache: "no-store",
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            data.message || "Unable to check food allergies."
+          );
+        }
+
+        if (!cancelled) {
+          setAllergyResult(data);
+        }
+      } catch (error) {
+        console.error("Allergy check error:", error);
+
+        if (!cancelled) {
+          setAllergyError(
+            error.message ||
+              "Unable to verify ingredients and allergies."
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setAllergyLoading(false);
         }
       }
     }
@@ -151,7 +203,13 @@ export default function Result() {
 
             <strong>
               {Number.isFinite(confidence)
-                ? `${(confidence * 100).toFixed(2)}%`
+                ? `${
+                    (
+                      confidence <= 1
+                        ? confidence * 100
+                        : confidence
+                    ).toFixed(2)
+                  }%`
                 : "Unavailable"}
             </strong>
           </div>
@@ -164,7 +222,12 @@ export default function Result() {
                   Number.isFinite(confidence)
                     ? Math.max(
                         0,
-                        Math.min(100, confidence * 100)
+                        Math.min(
+                          100,
+                          confidence <= 1
+                            ? confidence * 100
+                            : confidence
+                        )
                       )
                     : 0
                 }%`,
@@ -172,6 +235,94 @@ export default function Result() {
             />
           </div>
         </div>
+      </section>
+
+      {/* Personal Allergy Check */}
+      <section className="predictions-section">
+        <h2>🛡️ Your Food Allergy Check</h2>
+
+        <p className="section-description">
+          We compare the available ingredients with saved
+          allergy records.
+        </p>
+
+        {allergyLoading ? (
+          <div className="recipe-detail-card">
+            <p>Checking food ingredients and allergies...</p>
+          </div>
+        ) : allergyError ? (
+          <div className="recipe-detail-card allergy-detail">
+            <h3>⚠️ Allergy Check Unavailable</h3>
+            <p>{allergyError}</p>
+          </div>
+        ) : allergyResult?.status === "unknown" ? (
+          <div className="recipe-detail-card allergy-detail">
+            <h3>⚠️ Ingredients Not Verified</h3>
+            <p>
+              {allergyResult.message ||
+                "Ingredients are not available in our database."}
+            </p>
+          </div>
+        ) : allergyResult?.status === "potential_match" ? (
+          <div className="recipe-detail-card allergy-detail">
+            <h3>⚠️ Potential Allergen Match</h3>
+
+            <p>
+              One or more available ingredients match your
+              saved allergy records. Avoid relying on this
+              result alone to decide whether the food is safe.
+            </p>
+
+            <ul>
+              {allergyResult.matches?.map((item, index) => (
+                <li key={`${item.allergyName}-${index}`}>
+                  <strong>
+                    {displayName(item.allergyName)}
+                  </strong>
+                  {" — matching ingredient: "}
+                  {displayName(item.ingredient)}
+
+                  {item.severity
+                    ? ` (reported severity: ${item.severity})`
+                    : ""}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : allergyResult?.status === "no_match_found" ? (
+          <div className="recipe-detail-card">
+            <h3>No Match Found in Available Data</h3>
+
+            <p>
+              No matching allergens were found in the available
+              ingredient records. This does not guarantee that
+              this food is safe for someone with food allergies.
+            </p>
+          </div>
+        ) : (
+          <div className="recipe-detail-card allergy-detail">
+            <h3>⚠️ Allergy Check Unavailable</h3>
+            <p>Please verify the food ingredients manually.</p>
+          </div>
+        )}
+
+        {/* Ingredients returned by the allergy API */}
+        {allergyResult?.ingredientsFound &&
+          Array.isArray(allergyResult.ingredients) && (
+            <div className="recipe-detail-card">
+              <h4>Ingredients Checked</h4>
+
+              <ul>
+                {allergyResult.ingredients.map(
+                  (ingredient, index) => (
+                    <li key={`${ingredient}-${index}`}>
+                      {displayName(ingredient)}
+                    </li>
+                  )
+                )}
+              </ul>
+            </div>
+          )}
       </section>
 
       {/* Database Food Details */}
@@ -214,7 +365,7 @@ export default function Result() {
 
             {recipe.ingredients && (
               <div className="recipe-detail-card">
-                <h4>🥥 Ingredients</h4>
+                <h4>🥥 Recipe Ingredients</h4>
                 <p>{formatValue(recipe.ingredients)}</p>
               </div>
             )}
@@ -243,9 +394,7 @@ export default function Result() {
             {recipe.cooking_instructions && (
               <div className="recipe-detail-card">
                 <h4>👨‍🍳 Cooking Instructions</h4>
-                <p>
-                  {formatValue(recipe.cooking_instructions)}
-                </p>
+                <p>{formatValue(recipe.cooking_instructions)}</p>
               </div>
             )}
 
@@ -257,8 +406,7 @@ export default function Result() {
 
                 {recipe.preparation_time != null && (
                   <p>
-                    Preparation time:{" "}
-                    {recipe.preparation_time} minutes
+                    Preparation time: {recipe.preparation_time} minutes
                   </p>
                 )}
 
@@ -306,7 +454,10 @@ export default function Result() {
               const score = Number(item.confidence);
 
               const percentage = Number.isFinite(score)
-                ? Math.max(0, Math.min(100, score * 100))
+                ? Math.max(
+                    0,
+                    Math.min(100, score <= 1 ? score * 100 : score)
+                  )
                 : 0;
 
               return (
@@ -323,9 +474,7 @@ export default function Result() {
                       <h3>{displayName(item.food_name)}</h3>
                     </div>
 
-                    <strong>
-                      {percentage.toFixed(2)}%
-                    </strong>
+                    <strong>{percentage.toFixed(2)}%</strong>
                   </div>
 
                   <div className="prediction-track">
@@ -345,14 +494,16 @@ export default function Result() {
         )}
       </section>
 
-      {/* Allergy Notice */}
+      {/* Safety Notice */}
       <div className="result-notice">
         <span>ⓘ</span>
 
         <p>
-          AI predictions may be incorrect. Database allergen
-          information may be incomplete. Always verify the actual
-          ingredients and preparation method before eating.
+          AI predictions and database records may be incomplete.
+          Food recipes can vary, and cross-contact may occur.
+          Always verify the actual ingredients and preparation
+          method before eating. Do not use this result alone to
+          determine whether a food is safe for an allergy.
         </p>
       </div>
 
