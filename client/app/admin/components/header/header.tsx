@@ -7,7 +7,7 @@ import { useAuth } from "../../../context/AuthContext";
 import ConfirmBox from "../../../components/confirmBox/confirmBox";
 
 type AdminHeaderViewProps = {
-  /** Opens the admin sidebar on small screens. */
+  /** Opens the admin sidebar on small screens */
   onMenuClick?: () => void;
 };
 
