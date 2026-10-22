@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import HeaderView from "../components/header/header";
-import SidebarView, { navItems } from "../components/sidebar/sidebar";
+import SidebarView, { navItems1 } from "../components/sidebar/sidebar";
 import FooterView from "../components/footer/footer";
 import { useAuth } from "../context/AuthContext";
 
@@ -67,7 +67,7 @@ export default function HomeView() {
           <section className="mt-10">
             <h2 className="text-xl font-semibold">Explore modules</h2>
             <div className="mt-4 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-              {navItems.map((item) => (
+              {navItems1.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}

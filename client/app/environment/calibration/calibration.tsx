@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, useEffect, type FormEvent } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import HeaderView from "../../components/header/header";
 import SidebarView from "../../components/sidebar/sidebar";
 import FooterView from "../../components/footer/footer";
@@ -10,8 +11,9 @@ import { useAuth } from "../../context/AuthContext";
 type ExertionLevel = "Low" | "Moderate" | "High";
 
 export default function CalibrationView() {
+  const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { user } = useAuth();
+  const { user, token } = useAuth();
 
   // Biometeorological Preference States (Default: 50)
   const [thermalComfort, setThermalComfort] = useState<number>(50);
@@ -26,6 +28,9 @@ export default function CalibrationView() {
   // Visual submission feedback state
   const [lastLoggedVector, setLastLoggedVector] = useState<object | null>(null);
   const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string>("");
+  const [saving, setSaving] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Dynamic interpretation descriptors
   const getThermalDescription = (val: number) => {
@@ -52,6 +57,47 @@ export default function CalibrationView() {
     return "Balanced tolerance (Comfortable in gentle breezes)";
   };
 
+  // Preload existing user preferences from PostgreSQL on component mount
+  useEffect(() => {
+    let ignore = false;
+    if (!token) return;
+
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
+    fetch(`${baseUrl}/api/preferences`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error(`Failed to load preferences (Status ${res.status})`);
+        return res.json();
+      })
+      .then((json) => {
+        if (!ignore && json.success && json.data) {
+          const d = json.data;
+          if (typeof d.thermal_tolerance === "number") setThermalComfort(d.thermal_tolerance);
+          if (typeof d.rain_tolerance === "number") setRainTolerance(d.rain_tolerance);
+          if (typeof d.uv_sensitivity === "number") setSunUvPreference(d.uv_sensitivity);
+          if (typeof d.wind_preference === "number") setWindSensitivity(d.wind_preference);
+          if (
+            d.exertion_capacity &&
+            ["Low", "Moderate", "High"].includes(d.exertion_capacity)
+          ) {
+            setPhysicalExertion(d.exertion_capacity as ExertionLevel);
+          }
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to load existing preferences:", err);
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [token]);
+
   const handleResetDefaults = () => {
     setThermalComfort(50);
     setRainTolerance(50);
@@ -60,12 +106,23 @@ export default function CalibrationView() {
     setPhysicalExertion("Moderate");
     setLastLoggedVector(null);
     setShowToast(false);
+    setErrorMessage(null);
   };
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setErrorMessage(null);
 
-    // Construct structured preference vector JSON
+    if (!token) {
+      setErrorMessage(
+        "Authentication required: Please sign in to save your comfort profile.",
+      );
+      return;
+    }
+
+    setSaving(true);
+
+    // Construct structured preference vector JSON for DSS traceability
     const structuredPreferenceVector = {
       timestamp: new Date().toISOString(),
       user: {
@@ -114,15 +171,54 @@ export default function CalibrationView() {
       ],
     };
 
-    // Requirement: console.log the final structured preference vector JSON
     console.log(
       "🚀 [Tourism DSS] Structured Preference Vector (Step 1: Calibration):",
       structuredPreferenceVector,
     );
-    console.log(JSON.stringify(structuredPreferenceVector, null, 2));
 
-    setLastLoggedVector(structuredPreferenceVector);
-    setShowToast(true);
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
+      const res = await fetch(`${baseUrl}/api/preferences`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          thermal_tolerance: Number(thermalComfort),
+          rain_tolerance: Number(rainTolerance),
+          uv_sensitivity: Number(sunUvPreference),
+          wind_preference: Number(windSensitivity),
+          exertion_capacity: physicalExertion,
+        }),
+      });
+
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok || !data?.success) {
+        throw new Error(
+          data?.message || `Failed to save preferences (Status ${res.status})`,
+        );
+      }
+
+      setLastLoggedVector(data?.data ?? structuredPreferenceVector);
+      setToastMessage(
+        "Preferences successfully calibrated and saved to database! Redirecting to Environmental Dashboard...",
+      );
+      setShowToast(true);
+
+      // Seamlessly transition to the Environmental Dashboard to continue workflow
+      setTimeout(() => {
+        router.push("/environment");
+      }, 750);
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error ? err.message : "Failed to persist comfort profile.";
+      console.error("Error saving preferences:", err);
+      setErrorMessage(msg);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -182,6 +278,37 @@ export default function CalibrationView() {
               </div>
             </header>
 
+            {/* Error Notification Banner */}
+            {errorMessage && (
+              <aside
+                role="alert"
+                aria-live="assertive"
+                className="mb-8 overflow-hidden rounded-2xl border border-rose-500/30 bg-rose-950/40 p-5 backdrop-blur-xl shadow-lg shadow-rose-500/10 flex items-start justify-between gap-4 animate-fade-in"
+              >
+                <div className="flex items-start gap-3">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-rose-500/20 text-rose-300 text-lg">
+                    ✕
+                  </span>
+                  <div>
+                    <h2 className="text-sm font-semibold text-rose-200">
+                      Unable to Save Preferences
+                    </h2>
+                    <p className="mt-1 text-xs text-rose-300/80">
+                      {errorMessage}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setErrorMessage(null)}
+                  className="text-slate-400 hover:text-white transition-colors text-lg leading-none cursor-pointer"
+                  aria-label="Close notification"
+                >
+                  ×
+                </button>
+              </aside>
+            )}
+
             {/* Notification Banner on Submission */}
             {showToast && (
               <aside
@@ -196,15 +323,11 @@ export default function CalibrationView() {
                     </span>
                     <div>
                       <h2 className="text-sm font-semibold text-teal-200">
-                        Preferences Calibrated Successfully!
+                        Preferences Calibrated & Saved!
                       </h2>
                       <p className="mt-1 text-xs text-slate-300">
-                        The structured preference vector JSON has been generated and
-                        output to the browser developer console (
-                        <code className="rounded bg-black/40 px-1 py-0.5 text-teal-300 font-mono">
-                          console.log
-                        </code>
-                        ).
+                        {toastMessage ||
+                          "Preferences successfully calibrated and saved to database! Redirecting to Environmental Dashboard..."}
                       </p>
                     </div>
                   </div>
@@ -221,7 +344,7 @@ export default function CalibrationView() {
                 {lastLoggedVector && (
                   <details className="mt-3 rounded-xl border border-white/10 bg-slate-950/80 p-3 text-xs">
                     <summary className="cursor-pointer font-medium text-teal-400 hover:text-teal-300">
-                      View logged preference JSON vector
+                      View saved preference JSON vector
                     </summary>
                     <pre className="mt-2 max-h-56 overflow-auto rounded-lg bg-black/50 p-3 font-mono text-[11px] text-teal-200/90 leading-relaxed">
                       {JSON.stringify(lastLoggedVector, null, 2)}
@@ -591,7 +714,7 @@ export default function CalibrationView() {
               {/* Action Buttons */}
               <div className="flex flex-col-reverse items-center justify-between gap-4 pt-4 sm:flex-row">
                 <Link
-                  href="/home"
+                  href="/environment"
                   className="w-full sm:w-auto text-center rounded-xl border border-white/10 bg-white/5 px-6 py-3.5 text-sm font-semibold text-slate-300 hover:bg-white/10 hover:text-white transition-colors"
                 >
                   ← Back to Dashboard
@@ -599,10 +722,20 @@ export default function CalibrationView() {
 
                 <button
                   type="submit"
-                  className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-teal-400 via-sky-500 to-teal-500 px-8 py-3.5 text-base font-bold text-slate-950 shadow-lg shadow-teal-500/25 transition-all hover:scale-[1.02] hover:shadow-teal-500/40 focus-visible:outline-2 focus-visible:outline-teal-400 active:scale-100 cursor-pointer"
+                  disabled={saving}
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-teal-400 via-sky-500 to-teal-500 px-8 py-3.5 text-base font-bold text-slate-950 shadow-lg shadow-teal-500/25 transition-all hover:scale-[1.02] hover:shadow-teal-500/40 focus-visible:outline-2 focus-visible:outline-teal-400 active:scale-100 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100 cursor-pointer"
                 >
-                  <span>Save Profile & Continue</span>
-                  <span aria-hidden="true">→</span>
+                  {saving ? (
+                    <>
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-950 border-t-transparent" />
+                      <span>Saving Profile...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Save Profile & Continue</span>
+                      <span aria-hidden="true">→</span>
+                    </>
+                  )}
                 </button>
               </div>
             </form>
