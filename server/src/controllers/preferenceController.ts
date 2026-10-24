@@ -10,6 +10,7 @@ import type {
   DashboardMetricsPayload,
   DiurnalSlotPayload,
   EvaluatedSuitabilityResponse,
+  AlternativeDestinationPayload,
 } from "../types/index.js";
 
 /** Helper to sanitize and clamp range slider metrics between 0 and 100 */
@@ -783,7 +784,10 @@ export async function evaluateSuitability(
       };
     });
 
-    // 11. Return consolidated JSON response matching system specification
+    // 11. Compute fallback alternative destinations
+    const fallbackOptions = computeFallbackAlternatives(lat, lon);
+
+    // 12. Return consolidated JSON response matching system specification
     res.status(200).json({
       success: true,
       message: "Environmental suitability evaluated successfully.",
@@ -795,6 +799,7 @@ export async function evaluateSuitability(
       diurnal_windows: diurnalWindows,
       suitability_score: currentScore, // for backward compatibility
       suitability_class: currentClass, // for backward compatibility
+      fallback_options: fallbackOptions,
       data: {
         current_score: currentScore,
         current_class: currentClass,
@@ -806,6 +811,7 @@ export async function evaluateSuitability(
         suitability_class: currentClass,
         features_used: batchPayload[targetHourIdx] ?? batchPayload[0]!,
         hourly_scores: scores,
+        fallback_options: fallbackOptions,
       },
     });
   } catch (err: unknown) {
@@ -815,6 +821,207 @@ export async function evaluateSuitability(
       success: false,
       message: "Internal server error during environmental suitability evaluation.",
       error: errorMsg,
+    });
+  }
+}
+
+/** Sample candidates across climatic zones in Sri Lanka */
+const SAMPLE_CANDIDATES = [
+  {
+    id: "kandy",
+    name: "Kandy",
+    latitude: 7.2906,
+    longitude: 80.6337,
+    region: "Central Province",
+    icon: "🛕",
+    climateZone: "Wet Highland",
+    description: "Sacred Buddhist shrine in the Royal Palace complex, nestled in misty tropical hills.",
+    activityCategory: "Heritage",
+    baseScore: 84,
+  },
+  {
+    id: "nuwara_eliya",
+    name: "Nuwara Eliya",
+    latitude: 6.9497,
+    longitude: 80.7839,
+    region: "Central Province",
+    icon: "⛰️",
+    climateZone: "Montane Zone",
+    description: "High-altitude tea country known for its cool, temperate climate and colonial architecture.",
+    activityCategory: "Hill Country",
+    baseScore: 88,
+  },
+  {
+    id: "matale",
+    name: "Matale",
+    latitude: 7.4723,
+    longitude: 80.6234,
+    region: "Central Province",
+    icon: "🌿",
+    climateZone: "Wet Zone",
+    description: "Agricultural hub famous for spice gardens and historical temples.",
+    activityCategory: "Heritage",
+    baseScore: 76,
+  },
+  {
+    id: "sigiriya",
+    name: "Sigiriya",
+    latitude: 7.9569,
+    longitude: 80.7597,
+    region: "Central Province",
+    icon: "🏰",
+    climateZone: "Dry Zone",
+    description: "Ancient 5th-century palace citadel rising 200m above the jungle plains.",
+    activityCategory: "Heritage",
+    baseScore: 82,
+  },
+  {
+    id: "dambulla",
+    name: "Dambulla",
+    latitude: 7.85,
+    longitude: 80.65,
+    region: "Central Province",
+    icon: "🗿",
+    climateZone: "Dry Zone",
+    description: "Extensive cave temple complex containing ancient Buddhist murals and statues.",
+    activityCategory: "Heritage",
+    baseScore: 80,
+  },
+  {
+    id: "horton_plains",
+    name: "Horton Plains",
+    latitude: 6.8031,
+    longitude: 80.7979,
+    region: "Central Province",
+    icon: "🦌",
+    climateZone: "Montane Zone",
+    description: "Protected national park featuring cloud forests and the World's End precipice.",
+    activityCategory: "Hill Country",
+    baseScore: 86,
+  },
+  {
+    id: "knuckles",
+    name: "Knuckles",
+    latitude: 7.4007,
+    longitude: 80.8106,
+    region: "Central Province",
+    icon: "🥾",
+    climateZone: "Wet Highland",
+    description: "Rugged mountain range offering challenging trekking and diverse biodiversity.",
+    activityCategory: "Adventure",
+    baseScore: 78,
+  },
+  {
+    id: "adams_peak",
+    name: "Adams Peak",
+    latitude: 6.8093,
+    longitude: 80.4992,
+    region: "Sabaragamuwa Province",
+    icon: "🌄",
+    climateZone: "Montane Zone",
+    description: "Sacred mountain renowned for its challenging nocturnal pilgrimage climb.",
+    activityCategory: "Adventure",
+    baseScore: 74,
+  },
+  {
+    id: "pidurangala",
+    name: "Pidurangala",
+    latitude: 7.9656,
+    longitude: 80.7618,
+    region: "Central Province",
+    icon: "🧗",
+    climateZone: "Dry Zone",
+    description: "Steep rock formation offering panoramic views of the adjacent Sigiriya rock.",
+    activityCategory: "Adventure",
+    baseScore: 81,
+  },
+  {
+    id: "peradeniya",
+    name: "Peradeniya",
+    latitude: 7.2718,
+    longitude: 80.597,
+    region: "Central Province",
+    icon: "🌸",
+    climateZone: "Wet Highland",
+    description: "Historical botanical gardens featuring massive palm avenues and orchid houses.",
+    activityCategory: "Heritage",
+    baseScore: 85,
+  },
+];
+
+function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return Math.round(R * c);
+}
+
+/**
+ * Computes up to 5 alternative travel destinations sorted by suitability score and proximity.
+ */
+export function computeFallbackAlternatives(lat: number, lon: number): AlternativeDestinationPayload[] {
+  return SAMPLE_CANDIDATES
+    .map((dest) => {
+      const distanceKm = calculateDistanceKm(lat, lon, dest.latitude, dest.longitude);
+      const score = dest.baseScore;
+      let suitabilityClass = "Good";
+      if (score >= 80) suitabilityClass = "Excellent";
+      else if (score >= 60) suitabilityClass = "Good";
+      else if (score >= 40) suitabilityClass = "Moderate";
+      else suitabilityClass = "Poor";
+
+      return {
+        id: dest.id,
+        name: dest.name,
+        latitude: dest.latitude,
+        longitude: dest.longitude,
+        activityCategory: dest.activityCategory,
+        icon: dest.icon,
+        distanceKm,
+        score,
+        suitabilityClass,
+        climateZone: dest.climateZone,
+        description: dest.description,
+      };
+    })
+    .filter((d) => d.distanceKm > 4) // Exclude current target destination
+    .sort((a, b) => b.score - a.score || a.distanceKm - b.distanceKm)
+    .slice(0, 5);
+}
+
+/**
+ * Endpoint to retrieve up to 5 alternative travel destinations.
+ *
+ * Route: GET /api/preferences/alternatives
+ * Access: Private (Requires Bearer JWT)
+ */
+export async function getAlternatives(
+  req: Request,
+  res: Response<ApiResponse<AlternativeDestinationPayload[]>>,
+): Promise<void> {
+  try {
+    const lat = req.query.lat ? Number(req.query.lat) : 7.957;
+    const lon = req.query.lon ? Number(req.query.lon) : 80.7603;
+
+    const alternatives = computeFallbackAlternatives(lat, lon);
+
+    res.status(200).json({
+      success: true,
+      message: "Alternative destinations retrieved successfully.",
+      data: alternatives,
+    });
+  } catch (error) {
+    console.error("Error in getAlternatives:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to retrieve alternative destinations.",
     });
   }
 }

@@ -15,8 +15,10 @@ import {
   type EnvironmentalFeatures,
   type MetricItemDetail,
   type DiurnalWindowSlot,
+  type AlternativeDestination,
   InferenceEngineError,
 } from "../services/suitabilityService";
+import { AlternativeCarousel } from "./suggest/alternativeCarousel";
 import { HistoryDrawer } from "./history/history";
 import {
   fetchHistory,
@@ -540,6 +542,40 @@ export default function EnvironmentView() {
     (isOffline503 ? "OFFLINE" : "EXCELLENT")
   ).toUpperCase();
 
+  // Alternative fallback destinations for low-suitability situations (< 40)
+  const fallback_options: AlternativeDestination[] =
+    suitabilityData?.fallback_options && suitabilityData.fallback_options.length > 0
+      ? suitabilityData.fallback_options
+      : SAMPLE_DESTINATIONS
+          .filter(
+            (d) => d.name.toLowerCase() !== currentDestinationName.toLowerCase(),
+          )
+          .slice(0, 5)
+          .map((d) => {
+            const dLat = ((d.latitude - latitude) * Math.PI) / 180;
+            const dLon = ((d.longitude - longitude) * Math.PI) / 180;
+            const a =
+              Math.sin(dLat / 2) ** 2 +
+              Math.cos((latitude * Math.PI) / 180) *
+                Math.cos((d.latitude * Math.PI) / 180) *
+                Math.sin(dLon / 2) ** 2;
+            const dist = Math.round(6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+
+            return {
+              id: d.id,
+              name: d.name,
+              latitude: d.latitude,
+              longitude: d.longitude,
+              activityCategory: d.activityCategory,
+              icon: d.icon,
+              distanceKm: Math.max(8, dist),
+              score: 84,
+              suitabilityClass: "Excellent",
+              climateZone: d.climateZone,
+              description: d.description,
+            };
+          });
+
   // Circular gauge math (radius = 78, circumference ≈ 502.65)
   const radius = 78;
   const circumference = 2 * Math.PI * radius;
@@ -710,6 +746,14 @@ export default function EnvironmentView() {
                   </svg>
                   <span>Re-evaluate</span>
                 </button>
+
+                <Link
+                  href={`/alternatives?datetime=${encodeURIComponent(targetDateTime)}&lat=${latitude}&lon=${longitude}`}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-teal-500/30 bg-teal-500/10 px-3.5 py-2 text-xs font-semibold text-teal-300 transition-all hover:bg-teal-500/20 hover:border-teal-400/50 hover:shadow-lg hover:shadow-teal-500/10 cursor-pointer shadow-sm"
+                  title="Explore alternative travel destinations"
+                >
+                  <span>🧭 Alternatives</span>
+                </Link>
 
                 <Link
                   href="/environment/calibration"
@@ -899,6 +943,34 @@ export default function EnvironmentView() {
                     ? "Favorable touring conditions with mild heat or wind factors. Suitable for standard sightseeing."
                     : "Sub-optimal biometeorological conditions detected. Consider adjusting schedule or visiting sheltered attractions."}
                 </p>
+
+                {/* Conditionally render AlternativeCarousel below the main Suitability Gauge ONLY if current_score < 40 */}
+                {dynamicScore < 40 && !loading && (
+                  <AlternativeCarousel
+                    alternatives={fallback_options}
+                    targetDateTime={targetDateTime}
+                    currentLat={latitude}
+                    currentLon={longitude}
+                    onSelectAlternative={(alt) => {
+                      setLoading(true);
+                      setLatitude(alt.latitude);
+                      setLongitude(alt.longitude);
+                    }}
+                  />
+                )}
+
+                {/* If score >= 40, provide a button to explore alternative locations directly from the gauge card */}
+                {dynamicScore >= 40 && !loading && (
+                  <div className="mt-4 w-full pt-3 border-t border-white/10">
+                    <Link
+                      href={`/alternatives?datetime=${encodeURIComponent(targetDateTime)}&lat=${latitude}&lon=${longitude}`}
+                      className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-teal-500/30 bg-teal-500/10 hover:bg-teal-500/20 py-2.5 px-3 text-xs font-semibold text-teal-300 hover:text-white transition-all cursor-pointer shadow-sm group"
+                    >
+                      <span>🧭 View Alternative Destinations</span>
+                      <span aria-hidden="true" className="transition-transform group-hover:translate-x-0.5">→</span>
+                    </Link>
+                  </div>
+                )}
               </div>
 
               {/* 2. Metric Grid: 2x3 CSS Grid */}

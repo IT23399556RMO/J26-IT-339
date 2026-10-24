@@ -100,6 +100,20 @@ export interface DiurnalSlotPayload {
   isBest?: boolean;
 }
 
+export interface AlternativeDestinationPayload {
+  id: string;
+  name: string;
+  latitude: number;
+  longitude: number;
+  activityCategory: string;
+  icon: string;
+  distanceKm: number;
+  score: number;
+  suitabilityClass: string;
+  climateZone?: string;
+  description?: string;
+}
+
 export interface EvaluatedSuitabilityResponse {
   current_score: number;
   current_class: string;
@@ -111,4 +125,5 @@ export interface EvaluatedSuitabilityResponse {
   suitability_class: string;
   features_used?: InferencePayload;
   hourly_scores?: number[];
+  fallback_options?: AlternativeDestinationPayload[];
 }

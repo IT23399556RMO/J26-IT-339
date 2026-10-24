@@ -22,6 +22,7 @@ export const navItems: NavItem[] = [
 // Placeholder routes — update once each module's page is created.
 export const navItems1: NavItem[] = [
   { label: "Environment", href: "/environment", icon: "🌿", description: "Weather & conditions" },
+  { label: "Alternatives", href: "/alternatives", icon: "🧭", description: "Alternative locations" },
   { label: "Crowds", href: "/crowd", icon: "👥", description: "Live crowd levels" },
   { label: "Itinerary", href: "/itinerary", icon: "🗺️", description: "Plan your trips" },
   { label: "Food", href: "/food", icon: "🍛", description: "Local cuisine guide" },

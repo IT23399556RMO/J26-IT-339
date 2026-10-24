@@ -48,6 +48,20 @@ export interface DiurnalWindowSlot {
   isBest?: boolean;
 }
 
+export interface AlternativeDestination {
+  id: string;
+  name: string;
+  latitude: number;
+  longitude: number;
+  activityCategory: string;
+  icon: string;
+  distanceKm: number;
+  score: number;
+  suitabilityClass: "Excellent" | "Good" | "Moderate" | "Poor" | string;
+  climateZone?: string;
+  description?: string;
+}
+
 export interface SuitabilityResponse {
   success: boolean;
   message?: string;
@@ -59,6 +73,7 @@ export interface SuitabilityResponse {
   diurnal_windows?: DiurnalWindowSlot[];
   suitability_score: number; // backward compatibility
   suitability_class: string; // backward compatibility
+  fallback_options?: AlternativeDestination[];
   status?: string;
   data?: {
     current_score?: number;
@@ -69,6 +84,7 @@ export interface SuitabilityResponse {
     diurnal_windows?: DiurnalWindowSlot[];
     features_used?: EnvironmentalFeatures;
     hourly_scores?: number[];
+    fallback_options?: AlternativeDestination[];
   };
 }
 
@@ -220,6 +236,12 @@ export async function fetchSuitabilityScore(
   const diurnalWindows =
     payload?.diurnal_windows ?? payload?.data?.diurnal_windows;
 
+  const fallbackOptions: AlternativeDestination[] = Array.isArray(payload?.fallback_options)
+    ? payload.fallback_options
+    : Array.isArray(payload?.data?.fallback_options)
+    ? payload.data.fallback_options
+    : [];
+
   return {
     success: payload?.success ?? true,
     status: payload?.status ?? "success",
@@ -232,6 +254,107 @@ export async function fetchSuitabilityScore(
     diurnal_windows: diurnalWindows,
     suitability_score: currentScore,
     suitability_class: currentClass,
+    fallback_options: fallbackOptions,
     data: payload?.data,
   };
+}
+
+/**
+ * Fetches alternative travel destinations with favorable biometeorological conditions.
+ */
+export async function fetchAlternativeDestinations(
+  latitude: number = 7.957,
+  longitude: number = 80.7603,
+  token?: string | null,
+): Promise<AlternativeDestination[]> {
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
+  try {
+    const res = await fetch(
+      `${baseUrl}/api/preferences/alternatives?lat=${latitude}&lon=${longitude}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      },
+    );
+    if (res.ok) {
+      const json = await res.json();
+      if (Array.isArray(json.data) && json.data.length > 0) {
+        return json.data;
+      }
+    }
+  } catch (err) {
+    console.warn("Backend alternatives fetch failed, using local fallback generator:", err);
+  }
+
+  // Fallback candidates if backend is offline or unreachable
+  return [
+    {
+      id: "nuwara_eliya",
+      name: "Nuwara Eliya",
+      latitude: 6.9497,
+      longitude: 80.7839,
+      activityCategory: "Hill Country",
+      icon: "⛰️",
+      distanceKm: 112,
+      score: 88,
+      suitabilityClass: "Excellent",
+      climateZone: "Montane Zone",
+      description: "High-altitude tea country with cool mountain breezes.",
+    },
+    {
+      id: "kandy",
+      name: "Kandy",
+      latitude: 7.2906,
+      longitude: 80.6337,
+      activityCategory: "Heritage",
+      icon: "🛕",
+      distanceKm: 76,
+      score: 84,
+      suitabilityClass: "Excellent",
+      climateZone: "Wet Highland",
+      description: "Sacred cultural capital surrounded by misty hills.",
+    },
+    {
+      id: "peradeniya",
+      name: "Peradeniya",
+      latitude: 7.2718,
+      longitude: 80.597,
+      activityCategory: "Heritage",
+      icon: "🌸",
+      distanceKm: 81,
+      score: 85,
+      suitabilityClass: "Excellent",
+      climateZone: "Wet Highland",
+      description: "Historical botanical gardens with tranquil shaded microclimates.",
+    },
+    {
+      id: "horton_plains",
+      name: "Horton Plains",
+      latitude: 6.8031,
+      longitude: 80.7979,
+      activityCategory: "Hill Country",
+      icon: "🦌",
+      distanceKm: 128,
+      score: 86,
+      suitabilityClass: "Excellent",
+      climateZone: "Montane Zone",
+      description: "Scenic plateau offering clear skies and crisp vistas.",
+    },
+    {
+      id: "dambulla",
+      name: "Dambulla",
+      latitude: 7.85,
+      longitude: 80.65,
+      activityCategory: "Heritage",
+      icon: "🗿",
+      distanceKm: 18,
+      score: 80,
+      suitabilityClass: "Excellent",
+      climateZone: "Dry Zone",
+      description: "Sheltered cave temple sanctuaries protected from weather extremes.",
+    },
+  ];
 }
