@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import Image from "next/image";
+import newLogo from "../../assets/newlogo.jpg";
 
 type NavItem = {
   label: string;
@@ -57,9 +59,7 @@ export default function SidebarView({ open = false, onClose }: SidebarViewProps)
         {/* Brand */}
         <div className="flex h-16 items-center justify-between border-b border-white/10 px-5">
           <Link href="/common" className="flex items-center gap-2" onClick={onClose}>
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-teal-400 to-sky-500 text-lg shadow-lg shadow-teal-500/30">
-              ✈️
-            </span>
+            <Image src={newLogo} alt="TravelMate Logo" width={34} height={34} className="h-8.5 w-8.5 rounded-xl object-cover shadow-sm" priority />
             <span className="text-xl font-bold tracking-tight text-white">
               Travel<span className="text-teal-400">Mate</span>
             </span>

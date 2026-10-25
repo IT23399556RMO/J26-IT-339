@@ -1,14 +1,21 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { useAuth } from "../../context/AuthContext";
-
-const inputClass =
-  "w-full rounded-xl border border-white/10 bg-slate-900/60 px-4 py-3 text-white placeholder:text-slate-500 transition-colors outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-400/30 disabled:opacity-50";
-
-const labelClass = "mb-2 block text-sm font-medium text-slate-200";
+import newLogo from "../../assets/newlogo.jpg";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faUser,
+  faEnvelope,
+  faLock,
+  faShieldHalved,
+  faCircleExclamation,
+  faSpinner,
+  faArrowLeft,
+} from "@fortawesome/free-solid-svg-icons";
 
 export default function RegisterView() {
   const router = useRouter();
@@ -98,198 +105,195 @@ export default function RegisterView() {
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-950 px-4 py-12 font-sans text-white">
-      {/* Decorative background */}
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-        <div className="absolute -top-40 -left-40 h-[28rem] w-[28rem] rounded-full bg-teal-500/30 blur-3xl" />
-        <div className="absolute -right-40 -bottom-40 h-[28rem] w-[28rem] rounded-full bg-sky-500/20 blur-3xl" />
+    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans antialiased text-gray-900">
+      {/* Brand Header */}
+      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
+        <Link href="/" className="inline-flex items-center gap-2.5 mb-4">
+          <Image
+            src={newLogo}
+            alt="TravelMate Logo"
+            width={44}
+            height={44}
+            className="h-11 w-11 rounded-xl object-cover shadow-sm border border-gray-200"
+            priority
+          />
+          <span className="text-2xl font-bold tracking-tight text-gray-900">
+            Travel<span className="text-emerald-600">Mate</span>
+          </span>
+        </Link>
+        <h1 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
+          Create your account
+        </h1>
+        <p className="mt-2 text-sm text-gray-600">
+          Start planning trips calibrated to your physical comfort
+        </p>
       </div>
 
-      <main className="relative z-10 w-full max-w-md">
-        <div className="rounded-3xl border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur-xl sm:p-10">
-          <h1 className="text-center text-3xl font-bold tracking-tight">
-            Register
-          </h1>
-          <p className="mt-2 text-center text-sm text-slate-400">
-            Create your account and start exploring.
-          </p>
-
+      {/* Auth Card */}
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md px-4 sm:px-0">
+        <div className="rounded-2xl border border-gray-200 bg-white p-8 sm:p-10 shadow-sm">
           {/* Error Banner */}
           {error && (
             <div
               role="alert"
-              className="mt-6 flex items-start gap-3 rounded-xl border border-rose-500/30 bg-rose-500/15 p-4 text-sm text-rose-200"
+              className="mb-6 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
             >
-              <svg
-                aria-hidden="true"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2}
-                className="mt-0.5 h-5 w-5 shrink-0 text-rose-400"
-              >
-                <circle cx="12" cy="12" r="10" />
-                <path strokeLinecap="round" d="M12 8v4m0 4h.01" />
-              </svg>
+              <FontAwesomeIcon
+                icon={faCircleExclamation}
+                className="mt-0.5 h-4 w-4 shrink-0 text-red-600"
+              />
               <span>{error}</span>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="name" className={labelClass}>
-                Name
+              <label
+                htmlFor="name"
+                className="block text-sm font-medium text-gray-700 mb-1.5"
+              >
+                Full name
               </label>
-              <input
-                id="name"
-                name="name"
-                type="text"
-                required
-                disabled={loading}
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                autoComplete="name"
-                placeholder="John Doe"
-                className={inputClass}
-              />
+              <div className="relative">
+                <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400">
+                  <FontAwesomeIcon icon={faUser} className="h-3.5 w-3.5" />
+                </span>
+                <input
+                  id="name"
+                  name="name"
+                  type="text"
+                  required
+                  disabled={loading}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  autoComplete="name"
+                  placeholder="Jane Doe"
+                  className="w-full rounded-xl border border-gray-300 bg-white pl-10 pr-3.5 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 outline-none transition-all shadow-sm focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                />
+              </div>
             </div>
 
             <div>
-              <label htmlFor="email" className={labelClass}>
-                Email
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700 mb-1.5"
+              >
+                Email address
               </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                required
-                disabled={loading}
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                autoComplete="email"
-                placeholder="you@example.com"
-                className={inputClass}
-              />
+              <div className="relative">
+                <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400">
+                  <FontAwesomeIcon icon={faEnvelope} className="h-3.5 w-3.5" />
+                </span>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  required
+                  disabled={loading}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="email"
+                  placeholder="you@example.com"
+                  className="w-full rounded-xl border border-gray-300 bg-white pl-10 pr-3.5 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 outline-none transition-all shadow-sm focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                />
+              </div>
             </div>
 
             <div>
-              <label htmlFor="password" className={labelClass}>
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700 mb-1.5"
+              >
                 Password
               </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                required
-                disabled={loading}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoComplete="new-password"
-                placeholder="••••••••"
-                className={inputClass}
-              />
+              <div className="relative">
+                <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400">
+                  <FontAwesomeIcon icon={faLock} className="h-3.5 w-3.5" />
+                </span>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  required
+                  disabled={loading}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="new-password"
+                  placeholder="Minimum 6 characters"
+                  className="w-full rounded-xl border border-gray-300 bg-white pl-10 pr-3.5 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 outline-none transition-all shadow-sm focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                />
+              </div>
             </div>
 
             <div>
-              <label htmlFor="confirmPassword" className={labelClass}>
-                Confirm Password
+              <label
+                htmlFor="confirmPassword"
+                className="block text-sm font-medium text-gray-700 mb-1.5"
+              >
+                Confirm password
               </label>
-              <input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                required
-                disabled={loading}
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                autoComplete="new-password"
-                placeholder="••••••••"
-                className={inputClass}
-              />
+              <div className="relative">
+                <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400">
+                  <FontAwesomeIcon icon={faShieldHalved} className="h-3.5 w-3.5" />
+                </span>
+                <input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type="password"
+                  required
+                  disabled={loading}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  autoComplete="new-password"
+                  placeholder="Repeat password"
+                  className="w-full rounded-xl border border-gray-300 bg-white pl-10 pr-3.5 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 outline-none transition-all shadow-sm focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                />
+              </div>
             </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex h-12 w-full items-center justify-center rounded-xl bg-gradient-to-r from-teal-400 to-sky-500 font-semibold text-slate-950 shadow-lg shadow-teal-500/30 transition-transform hover:scale-[1.02] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-400 active:scale-100 disabled:opacity-50 disabled:hover:scale-100 cursor-pointer disabled:cursor-not-allowed"
-            >
-              {loading ? (
-                <span className="flex items-center gap-2">
-                  <svg
-                    className="h-5 w-5 animate-spin text-slate-950"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    />
-                  </svg>
-                  Creating account...
-                </span>
-              ) : (
-                "Register"
-              )}
-            </button>
+            <div className="pt-2">
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full rounded-xl bg-emerald-600 hover:bg-emerald-700 py-3 px-4 text-sm font-semibold text-white shadow-sm transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
+              >
+                {loading ? (
+                  <>
+                    <FontAwesomeIcon icon={faSpinner} className="h-4 w-4 animate-spin text-white" />
+                    <span>Creating account...</span>
+                  </>
+                ) : (
+                  "Create Account"
+                )}
+              </button>
+            </div>
           </form>
 
-          {/* Divider */}
-          <div className="my-6 flex items-center gap-4">
-            <span className="h-px flex-1 bg-white/10" />
-            <span className="text-xs tracking-wider text-slate-500 uppercase">
-              or
-            </span>
-            <span className="h-px flex-1 bg-white/10" />
-          </div>
-
-          {/* Google (UI only) */}
-          <button
-            type="button"
-            className="flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-white/15 bg-white font-medium text-slate-800 transition-colors hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-400 cursor-pointer"
-          >
-            <svg aria-hidden="true" viewBox="0 0 48 48" className="h-5 w-5">
-              <path
-                fill="#FFC107"
-                d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"
-              />
-              <path
-                fill="#FF3D00"
-                d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"
-              />
-              <path
-                fill="#4CAF50"
-                d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"
-              />
-              <path
-                fill="#1976D2"
-                d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"
-              />
-            </svg>
-            Sign in with Google
-          </button>
-
-          {/* Login prompt */}
-          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <p className="text-sm text-slate-400">Already have an account?</p>
-            <Link
-              href="/sign/login"
-              className="rounded-full border border-teal-400/50 px-5 py-1.5 text-sm font-semibold text-teal-300 transition-colors hover:bg-teal-400/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-400"
-            >
-              Login
-            </Link>
+          {/* Toggle between Register and Login */}
+          <div className="mt-8 border-t border-gray-100 pt-6 text-center">
+            <p className="text-sm text-gray-600">
+              Already have an account?{" "}
+              <Link
+                href="/sign/login"
+                className="font-semibold text-emerald-600 hover:text-emerald-700 hover:underline transition-colors"
+              >
+                Sign in
+              </Link>
+            </p>
           </div>
         </div>
-      </main>
+
+        {/* Back to Home Link */}
+        <div className="mt-6 text-center">
+          <Link
+            href="/"
+            className="text-xs text-gray-500 hover:text-gray-700 transition-colors inline-flex items-center gap-1.5"
+          >
+            <FontAwesomeIcon icon={faArrowLeft} className="h-3 w-3" />
+            <span>Back to home</span>
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }
-

@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
+import newLogo from "../../assets/newlogo.jpg";
 import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import ConfirmBox from "../confirmBox/confirmBox";
@@ -61,9 +63,7 @@ export default function HeaderView({ onMenuClick }: HeaderViewProps) {
               </button>
             )}
             <Link href="/home" className="flex items-center gap-2 lg:hidden">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-teal-400 to-sky-500 text-lg shadow-lg shadow-teal-500/30">
-                ✈️
-              </span>
+              <Image src={newLogo} alt="TravelMate Logo" width={36} height={36} className="h-9 w-9 rounded-xl object-cover shadow-sm" priority />
               <span className="hidden text-xl font-bold tracking-tight text-white sm:inline">
                 Travel<span className="text-teal-400">Mate</span>
               </span>
