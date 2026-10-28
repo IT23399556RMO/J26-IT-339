@@ -1,6 +1,6 @@
 # 🌴 TravelMate: AI-Enabled Tourism Decision Support System
 
-**Research Project ID:** J26-IT339  
+**Research Project ID:** J26-IT-339  
 **Module:** BSc (Hons) Information Technology Final Year Research Project (RP)  
 **Research Cluster:** Software Systems & Technologies (SST) @ SLIIT  
 
@@ -41,7 +41,7 @@ TravelMate is the synthesis of four distinct academic research pillars, develope
 ### 4. AI-Based Food Recognition and Dietary Guidance
 **Lead Researcher:** Ridmi Pavithra K.P.
 *   **The Engine:** TensorFlow / Keras utilizing the EfficientNetB0 Convolutional Neural Network architecture.
-*   **The Innovation:** Foreigners often struggle to identify local Sri Lankan dishes, posing severe allergy risks. Users simply snap a photo; our vision model classifies the food and instantly cross-references the ingredients against the user's securely stored medical and allergy profile to provide critical safety guidance.
+*   **The Innovation:** Foreigners often struggle to identify local Sri Lankan dishes, posing severe allergy risks. Users simply snap a photo; our vision model classifies the food and instantly cross-references the ingredients against the user's securely stored allergy profile to provide critical safety guidance.
 
 ---
 
@@ -60,7 +60,7 @@ To support these intensive AI operations without sacrificing mobile performance,
 
 ### 🧠 The AI Inference Cluster (Microservices)
 *   **Technologies:** Python 3.12+, FastAPI, Uvicorn, PyTorch, TensorFlow, Scikit-Learn.
-*   **Architectural Justification:** Heavy machine learning models (like our DQN agent and Random Forest regressors) are serialized and kept entirely in RAM. This allows FastAPI to deliver complex predictions back to the Node.js server in under 500 milliseconds.
+*   **Architectural Justification:** Heavy machine learning models (like our DQN agent and Random Forest regressors) are serialized and kept entirely in RAM. This allows FastAPI to deliver complex predictions back to the Node.js server in under 1000 milliseconds.
 
 ---
 
