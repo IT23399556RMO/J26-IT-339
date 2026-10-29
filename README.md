@@ -36,7 +36,7 @@ TravelMate is the synthesis of four distinct academic research pillars, develope
 ### 3. Adaptive Explainable Itinerary Optimization
 **Lead Researcher:** A.A.S.P. Adhikari (IT23286900)
 *   **The Engine:** Deep Q-Network (DQN) with Action-Masking, paired with NLP Sentiment Analysis.
-*   **The Innovation:** A dual-stage AI pipeline that guarantees a 0% budget violation rate. It dynamically sequences itineraries to maximize enjoyment while strictly adhering to time constraints and wallet sizes. If sudden rain strikes, the system re-routes the entire day in under 0.45 seconds and suggests autonomous budget trade-offs (e.g., swapping a hired van for a sedan to afford a premium ticket).
+*   **The Innovation:** A dual-stage AI pipeline that guarantees a 0% budget violation rate. It dynamically sequences itineraries to maximize enjoyment while strictly adhering to time constraints and wallet sizes.
 
 ### 4. AI-Based Food Recognition and Dietary Guidance
 **Lead Researcher:** Ridmi Pavithra K.P.
