@@ -1,8 +1,6 @@
 # IT23286832 - DE Silva J.G.M.N
 # TravelMate — Smart Crowd Forecasting & Prediction System 
-
 # Research Project ID:** J26-IT339
-
 # Component:** 2 – Smart Crowd Forecasting & Prediction System
 # Researcher:** - DE Silva J.G.M.N
 # Module:** BSc (Hons) Information Technology Final Year Research Project (RP)
