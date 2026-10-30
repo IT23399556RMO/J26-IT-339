@@ -107,7 +107,6 @@ CLIENT_URL=http://localhost:3000
 DB_HOST=localhost
 DB_PORT=5432
 DB_USER=postgres
-DB_PASS=your_database_password
 DB_NAME=travelmate_users
 ```
 
